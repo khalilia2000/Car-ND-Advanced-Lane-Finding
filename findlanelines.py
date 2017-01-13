@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from imagetransform import ImageTransform
 
-from_computer_1 = False
+from_computer_1 = True
 if from_computer_1:
     # when working from computer 1
     cal_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/camera_cal/"
@@ -128,7 +128,7 @@ def plot_grid(images, labels, cmaps):
     g_fig.update(wspace=wspace, hspace=hspace)
     
     # setting up the figure
-    size_factor = 3.0
+    size_factor = 4.5
     aspect_ratio = 1.777
     fig_w_size = n_cols*size_factor*aspect_ratio+(n_cols-1)*wspace
     fig_h_size = n_rows*size_factor+(n_rows-1)*hspace
@@ -164,7 +164,7 @@ def process_images(images=None):
     img_pre = img_trans_obj.RGB
     
     # binary image containing directional sobel with thresholds    
-    img_ast = img_trans_obj.get_angle_sobel_thresh(thresh=(0.5,1.2))
+    img_ast = img_trans_obj.get_angle_sobel_thresh(thresh=(0.7,1.2))
     # binary image containing magnitude of the gradient    
     img_mst = img_trans_obj.get_mag_sobel_thresh(thresh=(30,110))
     # binary image containing abs magnitude of the x sobel gradient
@@ -172,9 +172,9 @@ def process_images(images=None):
     # binary image containing abs magnitude of the x sobel gradient
     img_dsty = img_trans_obj.get_dir_sobel_thresh(orient='y',thresh=(30,110))
     # binary image containing the R channel  
-    img_R = img_trans_obj.get_R_thresh(thresh=(200,255))
+    img_R = img_trans_obj.get_R_thresh(thresh=(150,255))
     # binary image containing the G channel  
-    img_G = img_trans_obj.get_G_thresh(thresh=(180,255))
+    img_G = img_trans_obj.get_G_thresh(thresh=(130,255))
     # binary image containing the H channel  
     img_H = img_trans_obj.get_H_thresh(thresh=(15,100))
     # binary image containing the S channel  
@@ -184,24 +184,23 @@ def process_images(images=None):
     
     # creating the final revised images 
     img_post = []
-    w_R = 1.0
-    w_G = 1.0
-    w_H = 1.0
-    w_S = 1.5
-    w_gr = 0.5
-    for img_R, img_G, img_H, img_S, img_gr in zip(img_R, img_G, img_H, img_S, img_gr):
-        img_post.append(np.zeros_like(img_R))
-        img_tmp = img_R*w_R+img_G*w_G+img_H*w_H+img_S*w_S+img_gr*w_gr
-        img_post[-1][img_tmp>=3.0] = 1 
+    w_ast = 0.5     #good
+    w_mst = 1.5     #
+    w_dstx = 1.5    
+    w_dsty = 0.5    
+    w_R = 1.3
+    w_G = 1.3
+    w_H = 0.6       # increase
+    w_S = 0.9
+    w_gr = 0.9
+    for R, G, H, S, gr, ast, mst, dstx, dsty in zip(img_R, img_G, img_H, img_S, 
+                                                img_gr, img_ast, img_mst, img_dstx, img_dsty):
+        img_post.append(np.zeros_like(R))
+        img_tmp = R*w_R + G*w_G + H*w_H + S*w_S + gr*w_gr + ast*w_ast + mst*w_mst + dstx*w_dstx + dsty*w_dsty       
+        img_post[-1][img_tmp>=5.0] = 1 
     img_post = np.asarray(img_post)
     
-#    img_post = []
-#    for img1, img2, img3 in zip(img_ast, img_mst, img_dstx, img_dsty):
-#        img_post.append(np.zeros_like(img1))
-#        img_post[-1][((img2 == 1) | (img3 == 1) | (img4 == 1)) & (img1 == 1)] = 1 
-#    img_post = np.asarray(img_post)
-    
-
+    #img_post = np.copy(img_G)
     
     # combining original and processed images for plotting
     i_to_plot = []
@@ -218,6 +217,7 @@ def process_images(images=None):
     
 
 def main():
+    process_images()
     pass
     
 
