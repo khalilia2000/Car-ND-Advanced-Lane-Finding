@@ -156,7 +156,7 @@ def load_test_images():
     return img_trns
     
 
-def process_images(images=None):
+def process_images(images=None, pass_grade=6):
     if not images:    
         img_trans_obj = load_test_images()
     img_trans_obj.to_RGB()
@@ -172,13 +172,15 @@ def process_images(images=None):
     # binary image containing abs magnitude of the x sobel gradient
     img_dsty = img_trans_obj.get_dir_sobel_thresh(orient='y',thresh=(30,110))
     # binary image containing the R channel  
-    img_R = img_trans_obj.get_R_thresh(thresh=(150,255))
+    img_R = img_trans_obj.get_R_thresh(thresh=(115,255))
     # binary image containing the G channel  
-    img_G = img_trans_obj.get_G_thresh(thresh=(130,255))
+    img_G = img_trans_obj.get_G_thresh(thresh=(115,255))
     # binary image containing the H channel  
     img_H = img_trans_obj.get_H_thresh(thresh=(15,100))
     # binary image containing the S channel  
     img_S = img_trans_obj.get_S_thresh(thresh=(80,225))
+    # binary image containing the L channel  
+    img_L = img_trans_obj.get_L_thresh(thresh=(110,225))
     # binary image containing the S channel  
     img_gr = img_trans_obj.get_gray_thresh(thresh=(180,225))
     
@@ -192,15 +194,16 @@ def process_images(images=None):
     w_G = 1.3
     w_H = 0.6       # increase
     w_S = 0.9
+    w_L = 1.0
     w_gr = 0.9
-    for R, G, H, S, gr, ast, mst, dstx, dsty in zip(img_R, img_G, img_H, img_S, 
+    for R, G, H, S, L, gr, ast, mst, dstx, dsty in zip(img_R, img_G, img_H, img_S, img_L,
                                                 img_gr, img_ast, img_mst, img_dstx, img_dsty):
         img_post.append(np.zeros_like(R))
-        img_tmp = R*w_R + G*w_G + H*w_H + S*w_S + gr*w_gr + ast*w_ast + mst*w_mst + dstx*w_dstx + dsty*w_dsty       
-        img_post[-1][img_tmp>=5.0] = 1 
+        img_tmp = R*w_R + G*w_G + H*w_H + S*w_S + L*w_L + gr*w_gr + ast*w_ast + mst*w_mst + dstx*w_dstx + dsty*w_dsty       
+        img_post[-1][img_tmp>=pass_grade] = 1 
     img_post = np.asarray(img_post)
     
-    #img_post = np.copy(img_G)
+    #img_post = np.copy(img_S)
     
     # combining original and processed images for plotting
     i_to_plot = []
