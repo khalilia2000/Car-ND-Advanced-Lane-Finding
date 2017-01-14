@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from imagetransform import ImageTransform
 
-from_computer_1 = True
+from_computer_1 = False
 if from_computer_1:
     # when working from computer 1
     cal_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/camera_cal/"
@@ -140,6 +140,20 @@ def plot_grid(images, labels, cmaps):
  
 
 
+def plot_comparison(original, revised):
+    # combining original and processed images for plotting
+    imgs_to_plot = []
+    for img1, img2 in zip(original, revised):
+        imgs_to_plot.append(img1)
+        imgs_to_plot.append(img2)
+    # creating labels and color maps and plotting the images
+    labels = np.empty(shape=(original.shape[0],2), dtype=str)
+    cmaps = ['gray' for i in range(len(original)+len(revised))]
+    cmaps = np.asarray(cmaps)
+    plot_grid(imgs_to_plot, labels, cmaps)
+    
+
+
 def load_test_images():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)    
@@ -154,6 +168,7 @@ def load_test_images():
     img_trns = ImageTransform(images, cam_matrix, dist_matrix, None)
     
     return img_trns
+    
     
 
 def process_images(images=None, pass_grade=6):
@@ -203,25 +218,41 @@ def process_images(images=None, pass_grade=6):
         img_post[-1][img_tmp>=pass_grade] = 1 
     img_post = np.asarray(img_post)
     
-    #img_post = np.copy(img_S)
-    
-    # combining original and processed images for plotting
-    i_to_plot = []
-    for img1, img2 in zip(img_pre, img_post):
-        i_to_plot.append(img1)
-        i_to_plot.append(img2)
-    
-    labels = np.empty(shape=(img_pre.shape[0],2), dtype=str)
-    cmaps = ['gray' for i in range(len(img_pre)+len(img_post))]
-    cmaps = np.asarray(cmaps)
-    plot_grid(i_to_plot, labels, cmaps)
-    
-    
+    return img_pre, img_post
     
 
+
+def draw_lines(img, lines, color=[255, 0, 0], thickness=3):
+    """
+    This function shows all of the specified lines on the photo
+    """
+    for line in lines:
+        for x1,y1,x2,y2 in line:
+            cv2.line(img, (x1, y1), (x2, y2), color, thickness)        
+    return
+
+
+
+def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
+    """
+    `img` is the processed binary image with lines drawn on it.
+    
+    `initial_img` should be the image before any processing.
+    
+    The result image is computed as follows:
+    
+    initial_img * α + img * β + λ
+    NOTE: initial_img and img must be the same shape!
+    """
+    return cv2.addWeighted(initial_img, α, img, β, λ)    
+
+
+
 def main():
-    process_images()
-    pass
+    img_pre, img_post = process_images()
+    for img in img_post:
+        draw_lines(img, [(10,20,30,40)])
+    plot_comparison(img_pre, img_post)
     
 
 if __name__=='__main__':
