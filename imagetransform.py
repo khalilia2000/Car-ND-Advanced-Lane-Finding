@@ -10,7 +10,7 @@ import cv2
 
 class ImageTransform(object):
   
-    def __init__(self, images, camera_matrix, dist_matrix, warp_matrix, colorspec='BGR'):
+    def __init__(self, images, labels, camera_matrix, dist_matrix, warp_matrix, colorspec='BGR'):
                  
         '''
         Construct an ImageTransform object for manipulating images.
@@ -19,6 +19,7 @@ class ImageTransform(object):
         # initializing variables
         self._num_examples = images.shape[0]
         self._images = images
+        self._labels = labels
         self._mtx = camera_matrix   # camera matrix
         self._dist = dist_matrix    # distortion matrix
         self._warp = warp_matrix    # warp matrix
@@ -34,12 +35,30 @@ class ImageTransform(object):
         self._H = None
         self._L = None
         self._S = None
+        self._processed_images = None
+        # viewport points
+        # x: is in percentage of the width
+        # y: is in percentage of the image height
+        self._p_0 = np.float32([[0.15,1.0]])
+        self._p_1 = np.float32([[0.45,0.6]])
+        self._p_2 = np.float32([[0.55,0.6]])
+        self._p_3 = np.float32([[0.85,1.0]])
+        self._viewport = np.float32([self._p_0,self._p_1,self._p_2,self._p_3])
       
+  
   
     @property
     def images(self):
         return self._images
+    
+    @images.setter
+    def images(self, value):
+        self._images = value
   
+    @property
+    def labels(self):
+        return self._labels
+        
     @property
     def mtx(self):
         return self._mtx
@@ -71,6 +90,72 @@ class ImageTransform(object):
     @property
     def blurred(self):
         return self._blurred
+
+    @property
+    def processed_images(self):
+        return self._processed_images
+    
+    @processed_images.setter
+    def processed_images(self, value):
+        self._processed_images = value
+       
+
+
+    def draw_lines(self, lines, color=[255, 0, 0], thickness=3, original=True, processed=False):
+        """
+        This function shows all of the specified lines on the photo
+        """
+        if original:
+            for line in lines:
+                for p1,p2 in line:
+                    for img in self._images:
+                        img_size = (img.shape[1],img.shape[0])
+                        p1_x = int(p1[0][0]*img_size[0])
+                        p1_y = int(p1[0][1]*img_size[1])
+                        p2_x = int(p2[0][0]*img_size[0])
+                        p2_y = int(p2[0][1]*img_size[1])
+                        cv2.line(img, (p1_x,p1_y), (p2_x,p2_y), color, thickness)
+                        
+        if processed:
+            for line in lines:
+                for p1,p2 in line:
+                    for img in self._processed_images:
+                        img_size = (img.shape[1],img.shape[0])
+                        p1_x = int(p1[0][0]*img_size[0])
+                        p1_y = int(p1[0][1]*img_size[1])
+                        p2_x = int(p2[0][0]*img_size[0])
+                        p2_y = int(p2[0][1]*img_size[1])
+                        cv2.line(img, (p1_x,p1_y), (p2_x,p2_y), color, thickness)
+   
+
+    def draw_viewport(self, original=True, processed=False):
+        self.draw_lines([[[self._p_0, self._p_1]]],original=original,processed=processed)
+        self.draw_lines([[[self._p_1, self._p_2]]],original=original,processed=processed)
+        self.draw_lines([[[self._p_2, self._p_3]]],original=original,processed=processed)
+        self.draw_lines([[[self._p_3, self._p_0]]],original=original,processed=processed)
+
+
+
+    def weighted_img(self, img, initial_img, α=0.8, β=1., λ=0.):
+        """
+        `img` is the processed binary image with lines drawn on it.
+        
+        `initial_img` should be the image before any processing.
+        
+        The result image is computed as follows:
+        
+        initial_img * α + img * β + λ
+        NOTE: initial_img and img must be the same shape!
+        """
+        return cv2.addWeighted(initial_img, α, img, β, λ)    
+
+
+
+    def convert_to_birds_eye(self):
+        """
+        to be implemented.
+        """
+        return self._images
 
     
     def to_blur(self, kernel_size=3):

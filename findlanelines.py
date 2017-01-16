@@ -140,15 +140,33 @@ def plot_grid(images, labels, cmaps):
  
 
 
-def plot_comparison(original, revised):
-    # combining original and processed images for plotting
+def plot_comparison(image_transform_obj):
+    """
+    plotting 2 columns of images with assoicated labels
+    org_images: the original images    
+    rev_images: revised / processed images
+    org_labels: labels associated with the original images
+    rev_labels: labels associated with the revisedimages
+    """
+    #
+    org_images = image_transform_obj.RGB
+    rev_images = image_transform_obj.processed_images
+    org_labels = image_transform_obj.labels
+    rev_labels = None
+    #
     imgs_to_plot = []
-    for img1, img2 in zip(original, revised):
+    for img1, img2 in zip(org_images, rev_images):
         imgs_to_plot.append(img1)
         imgs_to_plot.append(img2)
     # creating labels and color maps and plotting the images
-    labels = np.empty(shape=(original.shape[0],2), dtype=str)
-    cmaps = ['gray' for i in range(len(original)+len(revised))]
+    labels = np.empty(shape=(org_images.shape[0],2), dtype=np.dtype((str, 255)))
+    if org_labels is not None:
+        for i in range(org_images.shape[0]):
+            labels[i, 0] = org_labels[i]
+    if rev_labels is not None:
+        for i in range(rev_images.shape[0]):
+            labels[i, 1] = rev_labels[i]
+    cmaps = ['gray' for i in range(len(org_images)+len(rev_images))]
     cmaps = np.asarray(cmaps)
     plot_grid(imgs_to_plot, labels, cmaps)
     
@@ -165,7 +183,7 @@ def load_test_images():
         images.append(img)
     images = np.asarray(images)
     # create image transform object
-    img_trns = ImageTransform(images, cam_matrix, dist_matrix, None)
+    img_trns = ImageTransform(images, f_names, cam_matrix, dist_matrix, None)
     
     return img_trns
     
@@ -174,9 +192,9 @@ def load_test_images():
 def process_images(images=None, pass_grade=6):
     if not images:    
         img_trans_obj = load_test_images()
-    img_trans_obj.to_RGB()
     
-    img_pre = img_trans_obj.RGB
+    # creating RGB image
+    #img_trans_obj.to_RGB()
     
     # binary image containing directional sobel with thresholds    
     img_ast = img_trans_obj.get_angle_sobel_thresh(thresh=(0.7,1.2))
@@ -215,44 +233,23 @@ def process_images(images=None, pass_grade=6):
                                                 img_gr, img_ast, img_mst, img_dstx, img_dsty):
         img_post.append(np.zeros_like(R))
         img_tmp = R*w_R + G*w_G + H*w_H + S*w_S + L*w_L + gr*w_gr + ast*w_ast + mst*w_mst + dstx*w_dstx + dsty*w_dsty       
-        img_post[-1][img_tmp>=pass_grade] = 1 
+        img_post[-1][img_tmp>=pass_grade] = 255
     img_post = np.asarray(img_post)
     
-    return img_pre, img_post
+    img_trans_obj.processed_images = np.copy(img_post)
+    img_trans_obj.draw_viewport(original=True, processed=True)
+    img_trans_obj.to_RGB()
     
-
-
-def draw_lines(img, lines, color=[255, 0, 0], thickness=3):
-    """
-    This function shows all of the specified lines on the photo
-    """
-    for line in lines:
-        for x1,y1,x2,y2 in line:
-            cv2.line(img, (x1, y1), (x2, y2), color, thickness)        
-    return
-
-
-
-def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
-    """
-    `img` is the processed binary image with lines drawn on it.
-    
-    `initial_img` should be the image before any processing.
-    
-    The result image is computed as follows:
-    
-    initial_img * α + img * β + λ
-    NOTE: initial_img and img must be the same shape!
-    """
-    return cv2.addWeighted(initial_img, α, img, β, λ)    
+    return img_trans_obj
 
 
 
 def main():
-    img_pre, img_post = process_images()
-    for img in img_post:
-        draw_lines(img, [(10,20,30,40)])
-    plot_comparison(img_pre, img_post)
+    img_trans_obj = process_images()
+    #p_0 = np.float32([[10,20]])
+    #p_1 = np.float32([[30,40]])
+    #img_trans_obj.draw_lines([[[p_0, p_1]]],original=True,processed=True)
+    plot_comparison(img_trans_obj)
     
 
 if __name__=='__main__':
