@@ -45,10 +45,10 @@ class ImageTransform(object):
         # x: is in percentage of the width
         # y: is in percentage of the image height
         # P0 to P3 form the source viewport
-        self._p_0 = np.float32([[0.15,1.0]])
-        self._p_1 = np.float32([[0.45,0.6]])
-        self._p_2 = np.float32([[0.55,0.6]])
-        self._p_3 = np.float32([[0.85,1.0]])
+        self._p_0 = np.float32([[0.10,1.0]])
+        self._p_1 = np.float32([[0.445,0.62]])
+        self._p_2 = np.float32([[0.555,0.62]])
+        self._p_3 = np.float32([[0.90,1.0]])
         # q0 to q3 form the destination viewport
         self._q_0 = np.float32([[0.25,1.0]])
         self._q_1 = np.float32([[0.25,0.2]])
@@ -121,10 +121,10 @@ class ImageTransform(object):
 
     @property
     def birds_eye_processed(self):
-        return self.birds_eye_processed
+        return self._birds_eye_processed
 
 
-    def draw_lines(self, lines, color=[255, 0, 0], thickness=3, original=True, processed=False):
+    def draw_lines(self, lines, color=[255, 0, 0], thickness=2, original=True, processed=False):
         """
         This function shows all of the specified lines on the photo
         color: color in original color space
