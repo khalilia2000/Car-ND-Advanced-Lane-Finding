@@ -600,3 +600,52 @@ class ImageTransform(object):
         ax_list = []
         for i in range(n_rows*n_cols):
             ax_list = self._plot_image(ax_list, g_fig, i, imgs_to_plot[i], labels.ravel()[i], cmap=cmaps.ravel()[i]) 
+
+
+
+    def process_images(self, pass_grade=0.57):
+        """
+        processes images and creates binary processed images
+        pass_grade: passing grade for pixel values give a scale of [0,1]
+        """
+    
+        # weights for the voting process for each binary contribution
+        weight_arr = [0.0, #ast             
+                      1.5, #mast            
+                      1.5, #dst_x           
+                      0.5, #dst_y           
+                      1.3, #r channel       
+                      1.3, #g channel       
+                      0.5, #b channel       
+                      0.6, #h channel
+                      0.9, #s channel
+                      1.0, #l channel
+                      0.9] #gray
+        
+        # adding all binary images together
+        img_binary = []
+        img_binary.append(weight_arr[0]  * self.get_angle_sobel_thresh(thresh=(0.8,1.2)))
+        img_binary.append(weight_arr[1]  * self.get_mag_sobel_thresh(thresh=(30,100)))
+        img_binary.append(weight_arr[2]  * self.get_dir_sobel_thresh(orient='x',thresh=(20,110)))
+        img_binary.append(weight_arr[3]  * self.get_dir_sobel_thresh(orient='y',thresh=(30,110)))
+        img_binary.append(weight_arr[4]  * self.get_R_thresh(thresh=(185,255)))
+        img_binary.append(weight_arr[5]  * self.get_G_thresh(thresh=(130,255)))
+        img_binary.append(weight_arr[6]  * self.get_B_thresh(thresh=(90,255)))
+        img_binary.append(weight_arr[7]  * self.get_H_thresh(thresh=(15,120)))
+        img_binary.append(weight_arr[8]  * self.get_S_thresh(thresh=(90,255)))
+        img_binary.append(weight_arr[9]  * self.get_L_thresh(thresh=(110,255)))
+        img_binary.append(weight_arr[10] * self.get_gray_thresh(thresh=(180,255)))
+        img_binary = np.asarray(img_binary)
+        img_binary_sum = img_binary.sum(axis=0)
+        
+        # creating a procssed binary image    
+        img_post = []    
+        for img in img_binary_sum: 
+            max_pix = img.max()
+            img_post.append(np.zeros_like(img.astype('uint8')))    
+            img_post[-1][img/max_pix >= pass_grade] = 255
+        img_post = np.asarray(img_post)
+               
+        # saving processed images to the iamge transform object
+        self.processed_images = np.copy(img_post)
+        

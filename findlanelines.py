@@ -15,7 +15,7 @@ import time
 from imagetransform import ImageTransform
 from lanelines import LaneLine
 
-from_computer_1 = False
+from_computer_1 = True
 if from_computer_1:
     # when working from computer 1
     cal_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/camera_cal/"
@@ -103,60 +103,6 @@ def load_test_images():
     img_trns = ImageTransform(images, f_names, cam_matrix, dist_matrix, None)
     
     return img_trns
-    
-    
-
-def process_images(images=None, pass_grade=0.57):
-    """
-    processes images
-    images: images to be processed. if None then test images will be used
-    pass_grade: passing grade for pixel values give a scale of [0,1]
-    """
-    # loading test images, if images are not provided    
-    if not images:    
-        img_trans_obj = load_test_images()
-
-    # weights for the voting process for each binary contribution
-    weight_arr = [0.0, #ast             
-                  1.5, #mast            
-                  1.5, #dst_x           
-                  0.5, #dst_y           
-                  1.3, #r channel       
-                  1.3, #g channel       
-                  0.5, #b channel       
-                  0.6, #h channel
-                  0.9, #s channel
-                  1.0, #l channel
-                  0.9] #gray
-    
-    # adding all binary images together
-    img_binary = []
-    img_binary.append(weight_arr[0]  * img_trans_obj.get_angle_sobel_thresh(thresh=(0.8,1.2)))
-    img_binary.append(weight_arr[1]  * img_trans_obj.get_mag_sobel_thresh(thresh=(30,100)))
-    img_binary.append(weight_arr[2]  * img_trans_obj.get_dir_sobel_thresh(orient='x',thresh=(20,110)))
-    img_binary.append(weight_arr[3]  * img_trans_obj.get_dir_sobel_thresh(orient='y',thresh=(30,110)))
-    img_binary.append(weight_arr[4]  * img_trans_obj.get_R_thresh(thresh=(185,255)))
-    img_binary.append(weight_arr[5]  * img_trans_obj.get_G_thresh(thresh=(130,255)))
-    img_binary.append(weight_arr[6]  * img_trans_obj.get_B_thresh(thresh=(90,255)))
-    img_binary.append(weight_arr[7]  * img_trans_obj.get_H_thresh(thresh=(15,120)))
-    img_binary.append(weight_arr[8]  * img_trans_obj.get_S_thresh(thresh=(90,255)))
-    img_binary.append(weight_arr[9]  * img_trans_obj.get_L_thresh(thresh=(110,255)))
-    img_binary.append(weight_arr[10] * img_trans_obj.get_gray_thresh(thresh=(180,255)))
-    img_binary = np.asarray(img_binary)
-    img_binary_sum = img_binary.sum(axis=0)
-    
-    # creating a procssed binary image    
-    img_post = []    
-    for img in img_binary_sum: 
-        max_pix = img.max()
-        img_post.append(np.zeros_like(img.astype('uint8')))    
-        img_post[-1][img/max_pix >= pass_grade] = 255
-    img_post = np.asarray(img_post)
-           
-    # saving processed images to the iamge transform object
-    img_trans_obj.processed_images = np.copy(img_post)
-    
-    return img_trans_obj
 
 
 
@@ -311,6 +257,8 @@ def detect_lanes(img, prev_left_pos=None, prev_right_pos=None, verbose=False):
         axes[1].imshow(res_img, cmap='gray')    
         axes[1].plot(left_fit_x, y_points)
         axes[1].plot(right_fit_x, y_points)
+        axes[1].set_ylim(img.shape[0],0)
+        axes[1].set_xlim(0,img.shape[1])
     
     # plotting filled poly image as the final check.
     if verbose:
@@ -321,12 +269,15 @@ def detect_lanes(img, prev_left_pos=None, prev_right_pos=None, verbose=False):
 
 
 def main():
-    img_trans_obj = process_images()
+    
+    # loading test images, if images are not provided    
+    img_trans_obj = load_test_images()
+    img_trans_obj.process_images()
     # drawing viewports 
     #img_trans_obj.draw_viewport(original=True, processed=True, src_viewport=True, dst_viewport=True)
     #img_trans_obj.plot_comparison(birds_eye=False)
     img_trans_obj.to_birds_eye(original=False, processed=True)
-    r, l = detect_lanes(img_trans_obj.birds_eye_processed[7], verbose=True)
+    r, l = detect_lanes(img_trans_obj.birds_eye_processed[4], verbose=True)
     if l<0:
         print('Radius of Curvature = {:.1f} m - Vehicle is {:.2f} m {} of center'.format(r, abs(l), 'right'))
     elif l>0:
