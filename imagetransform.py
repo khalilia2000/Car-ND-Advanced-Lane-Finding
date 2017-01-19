@@ -564,31 +564,32 @@ class ImageTransform(object):
 
 
 
-    def process_images(self, pass_grade=0.57):
+    def process_images(self, pass_grade=0.52):
         """
         processes images and creates binary processed images
         pass_grade: passing grade for pixel values give a scale of [0,1]
         """
     
         # Assign weights for the voting process for each binary contribution
-        weight_arr = [0.0, #ast             
-                      1.5, #mast            
-                      1.5, #dst_x           
-                      0.5, #dst_y           
-                      1.3, #r channel       
-                      1.3, #g channel       
-                      0.5, #b channel       
-                      0.6, #h channel
-                      0.9, #s channel
-                      1.0, #l channel
-                      0.9] #gray
+        weight_arr = [0.8, #ast             
+                      0.8, #mast            
+                      1.0, #dst_x           
+                      1.0, #dst_y           
+                      0.6, #r channel       
+                      0.6, #g channel       
+                      0.3, #b channel       
+                      0.5, #h channel
+                      1.0, #s channel
+                      0.5, #l channel
+                      0.5] #gray        
+  
         
         # Combine all binary images together - weighted sum
         img_binary = []
         img_binary.append(weight_arr[0]  * self.get_angle_sobel_thresh(thresh=(0.8,1.2)))
-        img_binary.append(weight_arr[1]  * self.get_mag_sobel_thresh(thresh=(30,100)))
-        img_binary.append(weight_arr[2]  * self.get_dir_sobel_thresh(orient='x',thresh=(20,110)))
-        img_binary.append(weight_arr[3]  * self.get_dir_sobel_thresh(orient='y',thresh=(30,110)))
+        img_binary.append(weight_arr[1]  * self.get_mag_sobel_thresh(thresh=(5,100)))
+        img_binary.append(weight_arr[2]  * self.get_dir_sobel_thresh(orient='x',thresh=(4,110)))
+        img_binary.append(weight_arr[3]  * self.get_dir_sobel_thresh(orient='y',thresh=(4,110)))
         img_binary.append(weight_arr[4]  * self.get_R_thresh(thresh=(185,255)))
         img_binary.append(weight_arr[5]  * self.get_G_thresh(thresh=(130,255)))
         img_binary.append(weight_arr[6]  * self.get_B_thresh(thresh=(90,255)))

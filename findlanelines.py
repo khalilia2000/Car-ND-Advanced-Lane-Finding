@@ -15,7 +15,7 @@ import time
 from imagetransform import ImageTransform
 from lanelines import LaneLine
 
-from_computer_1 = False
+from_computer_1 = True
 if from_computer_1:
     # when working from computer 1
     cal_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/camera_cal/"
@@ -93,7 +93,7 @@ def load_test_images():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)    
     # load all test images
-    f_names = glob.glob(tst_dir+'*.jpg')
+    f_names = glob.glob(tst_dir+'*.png')
     images = []
     for idx, fname in enumerate(f_names):
         img = cv2.imread(fname)
@@ -106,17 +106,32 @@ def load_test_images():
 
 
 
+def replace_frame(frame_img, left_lane, right_lane):
+    
+    # build the ImageTransform object
+    # process_image
+    # to_birds_eye(original=True, processed=True
+    # result = obj.detect_lanes()
+    # check for sanity and get is_detected vaiable
+    # if is_detected:
+    # pass results_0 to left_lane and results_1 to right_lane
+    # pass the appropriate fit_poly from left and right to imgtransfer.plot_fitted_poly with appropriate label
+    # return obj._processed_images_0
+    pass
+
+
+
 def main():
     
     # loading test images, if images are not provided    
     img_trans_obj = load_test_images()
     img_trans_obj.process_images()
     
-    # drawing viewports 
-    #img_trans_obj.draw_viewport(original=True, processed=True, src_viewport=True, dst_viewport=True)
+    #img_trans_obj.plot_comparison(birds_eye=True)
+    #return
     
     img_trans_obj.to_birds_eye(original=True, processed=True)
-    results = img_trans_obj.detect_lanes()
+    results = img_trans_obj.detect_lanes(verbose=True)
 
     poly_fits = []
     labels = []    
