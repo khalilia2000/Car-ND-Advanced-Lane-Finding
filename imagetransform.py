@@ -46,14 +46,14 @@ class ImageTransform(object):
         # y: is in percentage of the image height
         # P0 to P3 form the source viewport
         self._p_0 = np.float32([[0.10,1.0]])
-        self._p_1 = np.float32([[0.445,0.62]])
-        self._p_2 = np.float32([[0.555,0.62]])
+        self._p_1 = np.float32([[0.42,0.65]])
+        self._p_2 = np.float32([[0.58,0.65]])
         self._p_3 = np.float32([[0.90,1.0]])
         # q0 to q3 form the destination viewport
-        self._q_0 = np.float32([[0.25,1.0]])
-        self._q_1 = np.float32([[0.25,0.2]])
-        self._q_2 = np.float32([[0.75,0.2]])
-        self._q_3 = np.float32([[0.75,1.0]])
+        self._q_0 = np.float32([[0.20,1.0]])
+        self._q_1 = np.float32([[0.20,0.2]])
+        self._q_2 = np.float32([[0.80,0.2]])
+        self._q_3 = np.float32([[0.80,1.0]])
         #
         # apply gaussian blura and camera undistortion, and convert to RGB
         self.to_blur()
@@ -288,7 +288,7 @@ class ImageTransform(object):
         
   
   
-    def get_dir_sobel_thresh(self, orient='x', sobel_kernel=2, thresh=(0, 255), warp=True):
+    def get_dir_sobel_thresh(self, orient='x', sobel_kernel=2, thresh=(0, 255)):
         '''
         Calculates directional gradient, and applies threshold. returns a binary image
         img: grayscaled image
@@ -311,15 +311,11 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(abs_scaled_sobel))
             sbinary[-1][(abs_scaled_sobel >= thresh[0]) & (abs_scaled_sobel <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary
+        return sbinary
   
     
     
-    def get_mag_sobel_thresh(self, sobel_kernel=3, thresh=(0, 255), warp=True):
+    def get_mag_sobel_thresh(self, sobel_kernel=3, thresh=(0, 255)):
         '''
         Calculates the magnitude of sobel gradient, and applies threshold. returns a binary image
         img: original image
@@ -340,15 +336,11 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(scaled_sobel))
             sbinary[-1][(scaled_sobel >= thresh[0]) & (scaled_sobel <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary
+        return sbinary
    
   
   
-    def get_angle_sobel_thresh(self, sobel_kernel=3, thresh=(0, np.pi/2), warp=True):
+    def get_angle_sobel_thresh(self, sobel_kernel=3, thresh=(0, np.pi/2)):
         '''
         Calculates the direction of sobel gradient, and applies threshold. returns a binary image
         img: original image
@@ -369,15 +361,11 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(dir_sobel))
             sbinary[-1][(dir_sobel >= thresh[0]) & (dir_sobel <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary
+        return sbinary
 
 
 
-    def get_R_thresh(self, thresh=(0,255), warp=True):
+    def get_R_thresh(self, thresh=(0,255)):
         '''
         returns a binary image calculated based on the threshold given on the R channel
         '''
@@ -389,15 +377,11 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(img))
             sbinary[-1][(img >= thresh[0]) & (img <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary
+        return sbinary
         
         
         
-    def get_B_thresh(self, thresh=(0,255), warp=True):
+    def get_B_thresh(self, thresh=(0,255)):
         '''
         returns a binary image calculated based on the threshold given on the B channel
         '''
@@ -409,15 +393,11 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(img))
             sbinary[-1][(img >= thresh[0]) & (img <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary       
+        return sbinary       
            
         
         
-    def get_G_thresh(self, thresh=(0,255), warp=True):
+    def get_G_thresh(self, thresh=(0,255)):
         '''
         returns a binary image calculated based on the threshold given on the B channel
         '''
@@ -429,15 +409,11 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(img))
             sbinary[-1][(img >= thresh[0]) & (img <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary         
+        return sbinary         
                    
         
         
-    def get_H_thresh(self, thresh=(0,255), warp=True):
+    def get_H_thresh(self, thresh=(0,255)):
         '''
         returns a binary image calculated based on the threshold given on the B channel
         '''
@@ -449,15 +425,11 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(img))
             sbinary[-1][(img >= thresh[0]) & (img <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary          
+        return sbinary          
                            
         
         
-    def get_L_thresh(self, thresh=(0,255), warp=True):
+    def get_L_thresh(self, thresh=(0,255)):
         '''
         returns a binary image calculated based on the threshold given on the B channel
         '''
@@ -469,15 +441,11 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(img))
             sbinary[-1][(img >= thresh[0]) & (img <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary  
+        return sbinary  
                    
         
         
-    def get_S_thresh(self, thresh=(0,255), warp=True):
+    def get_S_thresh(self, thresh=(0,255)):
         '''
         returns a binary image calculated based on the threshold given on the B channel
         '''
@@ -489,15 +457,11 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(img))
             sbinary[-1][(img >= thresh[0]) & (img <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary                    
+        return sbinary                    
                     
         
         
-    def get_gray_thresh(self, thresh=(0,255), warp=True):
+    def get_gray_thresh(self, thresh=(0,255)):
         '''
         returns a binary image calculated based on the threshold given on the B channel
         '''
@@ -509,11 +473,8 @@ class ImageTransform(object):
             sbinary.append(np.zeros_like(img))
             sbinary[-1][(img >= thresh[0]) & (img <= thresh[1])] = 1
         sbinary = np.asarray(sbinary)
-        # warp perspective if needed
-        if warp and self._warp != None:
-            return np.asarray([cv2.WarpPerspective(img, self._warp, (img.shape[1],img.shape[0]), flags=cv2.INTER_LINEAR) for img in sbinary])
-        else:    
-            return sbinary                           
+        return sbinary                           
+        
         
         
     def _plot_image(self, ax_list, grid_fig, grid_index, img, label="", cmap=None):
@@ -609,7 +570,7 @@ class ImageTransform(object):
         pass_grade: passing grade for pixel values give a scale of [0,1]
         """
     
-        # weights for the voting process for each binary contribution
+        # Assign weights for the voting process for each binary contribution
         weight_arr = [0.0, #ast             
                       1.5, #mast            
                       1.5, #dst_x           
@@ -622,7 +583,7 @@ class ImageTransform(object):
                       1.0, #l channel
                       0.9] #gray
         
-        # adding all binary images together
+        # Combine all binary images together - weighted sum
         img_binary = []
         img_binary.append(weight_arr[0]  * self.get_angle_sobel_thresh(thresh=(0.8,1.2)))
         img_binary.append(weight_arr[1]  * self.get_mag_sobel_thresh(thresh=(30,100)))
@@ -648,4 +609,247 @@ class ImageTransform(object):
                
         # saving processed images to the iamge transform object
         self.processed_images = np.copy(img_post)
+        
+        
+        
+    def detect_lanes(self, prev_left_pos=None, prev_right_pos=None, verbose=False):
+        """
+        detects the lane lines in the img and returns xxx
+        prev_left_pos, and prev_right_pos are the previous position of the left and right lanes respectively.
+        verbose mode is only used for debugging
+        """
+        
+        results_list = []
+        for img in self._birds_eye_processed:
+            
+            if verbose:
+                fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(14,7.87))
+                axes[0].imshow(img, cmap='gray')            
+            
+            # initializing local variables including copy of the image
+            res_img = np.zeros_like(img)    # revised image with lane lines plotted on it
+            color_res_img = np.dstack((res_img, res_img, res_img)) # colored resulting image 
+            x_margin = 100                  # margin around the centre to look for lane line pixels 
+            num_horizontal_bands = 10       # number of hoirzontal bands used to trace the lane lines
+            y_grid = np.linspace(0, img.shape[0], num_horizontal_bands, dtype='uint16') # horizontal band coordiantes
+            y_grid = y_grid[::-1]           # reversing the order
+            img_width = img.shape[1]        # width of the image
+            img_height = img.shape[0]       # height of the image
+            left_lane_yvals = []            # keeping track of all points for left lane
+            left_lane_xvals = []            # keeping track of all points for left lane
+            right_lane_yvals = []           # keeping track of all points for right lane
+            right_lane_xvals = []           # keeping track of all points for right lane
+            
+            # finding left lane - initial attempt 
+            if prev_left_pos is None:
+                bottom_left_hist = np.sum(img[img_height//2:,:img_width//2],axis=0)
+                bottom_left_hist_list = bottom_left_hist.tolist()
+                left_max_index_list = [i for i, x in enumerate(bottom_left_hist_list) if x==bottom_left_hist.max()]
+                left_pos = left_max_index_list[len(left_max_index_list)//2]
+            else:
+                left_pos = prev_left_pos
+            left_pos_delta = 0
+            
+            # finding right lane - initial attempt
+            if prev_right_pos is None:
+                bottom_right_hist = np.sum(img[img_height//2:,img_width//2:],axis=0)
+                bottom_right_hist_list = bottom_right_hist.tolist()
+                right_max_index_list = [i for i, x in enumerate(bottom_right_hist_list) if x==bottom_right_hist.max()]
+                right_pos = right_max_index_list[len(right_max_index_list)//2]+img_width//2
+            else:
+                right_pos = prev_right_pos
+            right_pos_delta = 0
+            
+            # Trace the lane lines from bottom of the image upward and detect lane pixels
+            for i in range(len(y_grid)-1):
+                # assigning the rows        
+                from_y = y_grid[i+1]
+                to_y = y_grid[i]
+                
+                # updating the left box for searching for lane points
+                box_left = img[from_y:to_y,max(left_pos-x_margin,0):min(left_pos+x_margin,img_width)]
+                res_img[from_y:to_y,max(left_pos-x_margin,0):min(left_pos+x_margin,img_width)] = box_left
+                box_left_hist = box_left.sum(axis=0)
+                
+                # adding coordinates of non-zero elements to the lists
+                left_lane_yvals += (np.nonzero(box_left)[0]+from_y).tolist()
+                left_lane_xvals += (np.nonzero(box_left)[1]+max(left_pos-x_margin,0)).tolist()
+                
+                # for visualization and debuggin purposes
+                if verbose:
+                    p1_x = max(left_pos-x_margin,0)
+                    p1_y = from_y
+                    p2_x = left_pos+x_margin
+                    p2_y = to_y
+                    cv2.rectangle(res_img, (p1_x,p1_y), (p2_x,p2_y), [255,0,0],2)
+                
+                # moving the position of the left box based on what was found
+                if box_left_hist.max() >= 0.5*abs(to_y-from_y):
+                    box_left_hist_list = box_left_hist.tolist()
+                    left_max_index_list = [i for i, x in enumerate(box_left_hist_list) if x==box_left_hist.max()]
+                    left_pos_delta = left_max_index_list[len(left_max_index_list)//2]+max(left_pos-x_margin,0)-left_pos
+                    left_pos = left_pos+left_pos_delta
+                else:
+                    left_pos = left_pos+left_pos_delta
+                left_pos = min(left_pos,img_width)
+                left_pos = max(left_pos, 0)
+                    
+                # updating the left box for searching for lane points
+                box_right = img[from_y:to_y,max(right_pos-x_margin,0):min(right_pos+x_margin,img_width)]
+                res_img[from_y:to_y,max(right_pos-x_margin,0):min(right_pos+x_margin,img_width)] = box_right
+                box_right_hist = box_right.sum(axis=0)
+                
+                # adding coordinates of non-zero elements to the lists
+                right_lane_yvals += (np.nonzero(box_right)[0]+from_y).tolist()
+                right_lane_xvals += (np.nonzero(box_right)[1]+max(right_pos-x_margin,0)).tolist()
+                
+                # for visualization and debuggin purposes
+                if verbose:
+                    p1_x = max(right_pos-x_margin,0)
+                    p1_y = from_y
+                    p2_x = right_pos+x_margin
+                    p2_y = to_y
+                    cv2.rectangle(res_img, (p1_x,p1_y), (p2_x,p2_y), [255,0,0],2)
+                
+                # moving the position of the right box based on what was found
+                if box_right_hist.max() >= 0.5*abs(to_y-from_y):
+                    box_right_hist_list = box_right_hist.tolist()
+                    right_max_index_list = [i for i, x in enumerate(box_right_hist_list) if x==box_right_hist.max()]
+                    right_pos_delta = right_max_index_list[len(right_max_index_list)//2]+max(right_pos-x_margin,0)-right_pos
+                    right_pos = right_pos+right_pos_delta
+                else:
+                    right_pos = right_pos+right_pos_delta  
+                right_pos = min(right_pos,img_width)
+                right_pos = max(right_pos, 0) 
+            
+            # converting lane point x and y's to np array objects
+            left_lane_yvals = np.asarray(left_lane_yvals)
+            left_lane_xvals = np.asarray(left_lane_xvals)
+            right_lane_yvals = np.asarray(right_lane_yvals)
+            right_lane_xvals = np.asarray(right_lane_xvals)
+            
+            # calculating best fit polylines - degree=2    
+            left_fit = np.polyfit(left_lane_yvals, left_lane_xvals, 2)
+            right_fit = np.polyfit(right_lane_yvals, right_lane_xvals, 2)
+            
+            # calculating the fitted line X values for all y values in the image
+            y_points = np.asarray(range(img_height), dtype=np.float32)
+            left_fit_x = left_fit[0]*y_points**2 + left_fit[1]*y_points + left_fit[2]
+            right_fit_x = right_fit[0]*y_points**2 + right_fit[1]*y_points + right_fit[2]    
+            
+            # Define conversions in x and y from pixels space to meters
+            ym_per_pix = 30/720 # meters per pixel in y dimension
+            xm_per_pix = 3.7/700 # meteres per pixel in x dimension
+        
+            # Calculate curvature radii for left and right lane and the average thereof
+            y_eval = img_height
+            left_fit_cr = np.polyfit(left_lane_yvals*ym_per_pix, left_lane_xvals*xm_per_pix, 2)
+            right_fit_cr = np.polyfit(right_lane_yvals*ym_per_pix, right_lane_xvals*xm_per_pix, 2)
+            left_curverad = ((1 + (2*left_fit_cr[0]*y_eval + left_fit_cr[1])**2)**1.5) \
+                                         /np.absolute(2*left_fit_cr[0])
+            right_curverad = ((1 + (2*right_fit_cr[0]*y_eval + right_fit_cr[1])**2)**1.5) \
+                                            /np.absolute(2*right_fit_cr[0])   
+            
+            # Calculate off-center location of the car assuming the centre of the image is the centre of teh car
+            center_position = img_width//2
+            left_lane_pos = center_position - left_fit_x[-1]
+            right_lane_pos = center_position - right_fit_x[-1]
+            off_center = np.mean((left_lane_pos, right_lane_pos))
+            
+            # converting ot m            
+            left_lane_pos *= xm_per_pix
+            right_lane_pos *= xm_per_pix
+            off_center *= xm_per_pix
+            
+            # Recast the x and y points into usable format for cv2.fillPoly()
+            pts_left = np.array([np.transpose(np.vstack([left_fit_x,y_points]))])
+            pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fit_x,y_points])))])
+            pts = np.hstack((pts_left, pts_right))
+
+            # Draw the lane onto the warped blank image
+            cv2.fillPoly(color_res_img, np.int_(pts), (0,255,0))   
+            
+            results = []
+            results.append({})  # left lane resutls
+            results.append({})  # right lane rseults
+            # left lane
+            results[0]['yvals'] = left_lane_yvals
+            results[0]['xvals'] = left_lane_xvals
+            results[0]['poly_fit'] = left_fit
+            results[0]['fitted_xvals'] = (center_position-left_fit_x)*xm_per_pix
+            results[0]['curve_rad'] = left_curverad
+            results[0]['base_pos'] = left_lane_pos
+            # right lane
+            results[1]['yvals'] = right_lane_yvals
+            results[1]['xvals'] = right_lane_xvals
+            results[1]['poly_fit'] = right_fit
+            results[1]['fitted_xvals'] = (center_position-right_fit_x)*xm_per_pix
+            results[1]['curve_rad'] = right_curverad
+            results[1]['base_pos'] = right_lane_pos
+            # appending the results
+            results_list.append(results)
+                        
+            # plotting tracing boxes and fitted lines on the raw processed image    
+            if verbose: 
+                axes[1].imshow(res_img, cmap='gray')    
+                axes[1].plot(left_fit_x, y_points)
+                axes[1].plot(right_fit_x, y_points)
+                axes[1].set_ylim(img.shape[0],0)
+                axes[1].set_xlim(0,img.shape[1])
+            
+            # plotting filled poly image as the final check.
+            if verbose:
+                axes[2].imshow(color_res_img)
+            
+        
+        return results_list
+
+
+
+    def plot_fitted_poly(self, fitted_poly_list, labels=None):
+        
+        self._processed_images = []        
+        
+        for idx, img in enumerate(self._RGB):                        
+            
+            res_img = np.zeros_like(img[:,:,0])    # revised image with lane lines plotted on it
+            color_res_img = np.dstack((res_img, res_img, res_img)) # colored resulting image 
+            img_height = img.shape[0]       # height of the image
+            img_width = img.shape[1]
+            
+            # calculating the y_points in vertical direction
+            y_points = np.asarray(range(img_height), dtype=np.float32)
+            
+            left_fit = fitted_poly_list[idx][0]
+            right_fit = fitted_poly_list[idx][1]
+            left_fit_x = left_fit[0]*y_points**2 + left_fit[1]*y_points + left_fit[2]
+            right_fit_x = right_fit[0]*y_points**2 + right_fit[1]*y_points + right_fit[2]   
+            
+            # Recast the x and y points into usable format for cv2.fillPoly()
+            pts_left = np.array([np.transpose(np.vstack([left_fit_x,y_points]))])
+            pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fit_x,y_points])))])
+            pts = np.hstack((pts_left, pts_right))
+            
+            # Draw the lane onto the warped blank image
+            cv2.fillPoly(color_res_img, np.int_(pts), (0,255,0))
+            
+            # warp perspective from birds_eye_view to the original perspective
+            img_size = (img_width, img_height)
+            src_viewport = np.float32([[self._p_0[0]],[self._p_1[0]],
+                                       [self._p_2[0]],[self._p_3[0]]]) * np.float32(img_size)
+            dst_viewport = np.float32([[self._q_0[0]],[self._q_1[0]],
+                                       [self._q_2[0]],[self._q_3[0]]]) * np.float32(img_size)
+            M_inv = cv2.getPerspectiveTransform(dst_viewport, src_viewport)
+            color_res_img = cv2.warpPerspective(color_res_img, M_inv, img_size, flags=cv2.INTER_LINEAR)
+            
+            # writing labels on images
+            if labels is not None:
+                cv2.putText(color_res_img, labels[idx], (50,50), cv2.FONT_HERSHEY_TRIPLEX, 0.7, (255,255,255))
+            
+            self._processed_images.append(cv2.addWeighted(img, 1, color_res_img, 0.3, 0))
+        
+        self._processed_images = np.asarray(self._processed_images)
+            
+            
+        
         
