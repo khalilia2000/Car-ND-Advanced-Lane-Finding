@@ -13,7 +13,7 @@ import numpy as np
 
 class ImageTransform(object):
   
-    def __init__(self, images, labels, camera_matrix, dist_matrix, warp_matrix, colorspec='BGR'):
+    def __init__(self, images, labels, camera_matrix, dist_matrix, colorspec='BGR'):
                  
         '''
         Construct an ImageTransform object for manipulating images.
@@ -25,7 +25,6 @@ class ImageTransform(object):
         self._labels = labels
         self._mtx = camera_matrix   # camera matrix
         self._dist = dist_matrix    # distortion matrix
-        self._warp = warp_matrix    # warp matrix
         self._colorspec = colorspec # color space of the images that are passed
         self._blurred = None
         self._undistorted = None
@@ -74,15 +73,19 @@ class ImageTransform(object):
     @property
     def labels(self):
         return self._labels
+    
+    @labels.setter
+    def labels(self, value):
+        self._labels = value        
+    
+    @property
+    def labels(self):
+        return self._labels
         
     @property
     def mtx(self):
         return self._mtx
         
-    @property
-    def warp(self):
-        return self._warp
-  
     @property
     def dist(self):
         return self._dist
@@ -809,7 +812,8 @@ class ImageTransform(object):
 
     def plot_fitted_poly(self, fitted_poly_list, labels=None):
         
-        self._processed_images = []        
+        self._processed_images = []     
+        self._labels = labels
         
         for idx, img in enumerate(self._RGB):                        
             
