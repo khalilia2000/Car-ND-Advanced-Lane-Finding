@@ -45,8 +45,8 @@ class ImageTransform(object):
         # y: is in percentage of the image height
         # P0 to P3 form the source viewport
         self._p_0 = np.float32([[0.10,1.0]])
-        self._p_1 = np.float32([[0.42,0.65]])
-        self._p_2 = np.float32([[0.58,0.65]])
+        self._p_1 = np.float32([[0.43,0.65]])
+        self._p_2 = np.float32([[0.57,0.65]])
         self._p_3 = np.float32([[0.90,1.0]])
         # q0 to q3 form the destination viewport
         self._q_0 = np.float32([[0.20,1.0]])
@@ -70,12 +70,8 @@ class ImageTransform(object):
         self._original_images = value
         self._num_examples = self._original_images.shape[0]
   
-    @property
-    def labels(self):
-        return self._labels
     
-    @labels.setter
-    def labels(self, value):
+    def set_labels(self, value):
         self._labels = value        
     
     @property
@@ -290,7 +286,21 @@ class ImageTransform(object):
         self._B = np.asarray([img[:,:,2] for img in self._RGB])
         
   
+
+    def get_canny(self, thresh=(10,25)):
+        # only works on gray images
+        self.to_gray()
+        # calculate canney edge transform
+        sbinary = []
+        for img in self._gray:
+            sbinary.append(cv2.Canny(img, thresh[0], thresh[1]))
+            sbinary[-1][sbinary[-1]>0] = 1
+        sbinary = np.asarray(sbinary)
+        return sbinary
   
+    
+    
+    
     def get_dir_sobel_thresh(self, orient='x', sobel_kernel=2, thresh=(0, 255)):
         '''
         Calculates directional gradient, and applies threshold. returns a binary image
@@ -567,15 +577,16 @@ class ImageTransform(object):
 
 
 
-    def process_images(self, pass_grade=0.52):
+    def process_images(self, pass_grade=0.56):
         """
         processes images and creates binary processed images
         pass_grade: passing grade for pixel values give a scale of [0,1]
         """
     
         # Assign weights for the voting process for each binary contribution
-        weight_arr = [0.8, #ast             
-                      0.8, #mast            
+        weight_arr = [0.2, #canny
+                      0.9, #ast
+                      0.9, #mast            
                       1.0, #dst_x           
                       1.0, #dst_y           
                       0.6, #r channel       
@@ -584,22 +595,23 @@ class ImageTransform(object):
                       0.5, #h channel
                       1.0, #s channel
                       0.5, #l channel
-                      0.5] #gray        
+                      0.5] #gray            
   
         
         # Combine all binary images together - weighted sum
         img_binary = []
-        img_binary.append(weight_arr[0]  * self.get_angle_sobel_thresh(thresh=(0.8,1.2)))
-        img_binary.append(weight_arr[1]  * self.get_mag_sobel_thresh(thresh=(5,100)))
-        img_binary.append(weight_arr[2]  * self.get_dir_sobel_thresh(orient='x',thresh=(4,110)))
-        img_binary.append(weight_arr[3]  * self.get_dir_sobel_thresh(orient='y',thresh=(4,110)))
-        img_binary.append(weight_arr[4]  * self.get_R_thresh(thresh=(185,255)))
-        img_binary.append(weight_arr[5]  * self.get_G_thresh(thresh=(130,255)))
-        img_binary.append(weight_arr[6]  * self.get_B_thresh(thresh=(90,255)))
-        img_binary.append(weight_arr[7]  * self.get_H_thresh(thresh=(15,120)))
-        img_binary.append(weight_arr[8]  * self.get_S_thresh(thresh=(90,255)))
-        img_binary.append(weight_arr[9]  * self.get_L_thresh(thresh=(110,255)))
-        img_binary.append(weight_arr[10] * self.get_gray_thresh(thresh=(180,255)))
+        img_binary.append(weight_arr[0]  * self.get_canny())
+        img_binary.append(weight_arr[1]  * self.get_angle_sobel_thresh(thresh=(0.8,1.2)))
+        img_binary.append(weight_arr[2]  * self.get_mag_sobel_thresh(thresh=(5,100)))
+        img_binary.append(weight_arr[3]  * self.get_dir_sobel_thresh(orient='x',thresh=(4,110)))
+        img_binary.append(weight_arr[4]  * self.get_dir_sobel_thresh(orient='y',thresh=(4,110)))
+        img_binary.append(weight_arr[5]  * self.get_R_thresh(thresh=(185,255)))
+        img_binary.append(weight_arr[6]  * self.get_G_thresh(thresh=(130,255)))
+        img_binary.append(weight_arr[7]  * self.get_B_thresh(thresh=(90,255)))
+        img_binary.append(weight_arr[8]  * self.get_H_thresh(thresh=(15,120)))
+        img_binary.append(weight_arr[9]  * self.get_S_thresh(thresh=(90,255)))
+        img_binary.append(weight_arr[10]  * self.get_L_thresh(thresh=(110,255)))
+        img_binary.append(weight_arr[11] * self.get_gray_thresh(thresh=(180,255)))
         img_binary = np.asarray(img_binary)
         img_binary_sum = img_binary.sum(axis=0)
         

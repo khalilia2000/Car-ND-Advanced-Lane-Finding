@@ -51,7 +51,7 @@ class LaneLine(object):
         self._yvals = None
         
         #number of interations to track
-        self._num_iter = 10
+        self._num_iter = 5
         
     
     @property

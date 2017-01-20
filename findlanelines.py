@@ -9,9 +9,7 @@ import numpy as np
 import cv2
 import glob
 
-import matplotlib.pyplot as plt
 from moviepy.editor import VideoFileClip
-import time
 
 from imagetransform import ImageTransform
 from lanelines import LaneLine
@@ -22,11 +20,12 @@ right_lane = LaneLine()
 cam_matrix = None
 dist_matrix = None
 
-from_computer_1 = False
+from_computer_1 = True
 if from_computer_1:
     # when working from computer 1
     cal_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/camera_cal/"
     tst_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/test_images/"
+    work_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/"
 else:
     # when working from computer 2
     cal_dir = "C:/Users/ali.khalili/Desktop/Car-ND/CarND-P4-Advanced-Lane-Lines/camera_cal/"
@@ -100,7 +99,7 @@ def calibrate_camera_from_path(cal_path, nx, ny, save_with_corners=False, save_u
 def load_test_images():
     
     # load all test images
-    f_names = glob.glob(tst_dir+'*.jpg')
+    f_names = glob.glob(tst_dir+'*.png')
     images = []
     for idx, fname in enumerate(f_names):
         img = cv2.imread(fname)
@@ -124,13 +123,12 @@ def replace_frame(frame_img):
     result = img_trans_obj.detect_lanes(verbose=False)
     
     # automatic check to see if lane lines are in fact detected:
-    # check to see that curvatures for left and right lanes are not far apart
     curve_ratio = max(result[0][0]['curve_rad'],result[0][1]['curve_rad']) / min(result[0][0]['curve_rad'],result[0][1]['curve_rad'])
-    detected = (curve_ratio<=3.0)    
+    detected = (curve_ratio<=3.3)    
     
     # check to see that lanes are separated by the right amount of distance
     dist = result[0][0]['fitted_xvals']-result[0][1]['fitted_xvals']
-    detected = detected and (dist.max()<=4.5) and (dist.min()>=1.5)
+    detected = detected and (dist.max()<=4.1) and (dist.min()>=1.1)
     
     # initialize left and right lane line objects
     left_lane.add_results(result[0][0], detected)
@@ -166,7 +164,7 @@ def process_movie(fname):
     '''
     movie_clip = VideoFileClip(work_dir+fname)
     processed_clip = movie_clip.fl_image(replace_frame)
-    processed_clip.write_videofile(work_dir+'AK_'+fname, audio=False, verbose=True, threads=2)
+    processed_clip.write_videofile(work_dir+'AK_'+fname, audio=False, verbose=True, threads=6)
     return
 
 
@@ -188,6 +186,16 @@ def load_and_process_test_images():
     poly_fits = []
     labels = []    
     for result in results:
+        
+        # automatic check to see if lane lines are in fact detected:
+        # check to see that curvatures for left and right lanes are not far apart
+        curve_ratio = max(result[0]['curve_rad'],result[1]['curve_rad']) / min(result[0]['curve_rad'],result[1]['curve_rad'])
+        detected = (curve_ratio<=3.3)    
+        # check to see that lanes are separated by the right amount of distance
+        dist = result[0]['fitted_xvals']-result[1]['fitted_xvals']
+        detected = detected and (dist.max()<=4.1) and (dist.min()>=1.1)      
+        print(curve_ratio, dist.max(), dist.min(), detected)
+                
         poly_fits.append([result[0]['poly_fit'],result[1]['poly_fit']])
         base_pos_offset = np.mean((result[0]['base_pos'],result[1]['base_pos']))
         curvature_rad = np.mean((result[0]['curve_rad'],result[1]['curve_rad']))
@@ -196,10 +204,12 @@ def load_and_process_test_images():
             label_text = 'Radius of Curvature = {:.1f} m - Vehicle is {:.2f} m {} of center'.format(curvature_rad, abs(base_pos_offset), 'right')
         elif base_pos_offset<0:
             label_text = 'Radius of Curvature = {:.1f} m - Vehicle is {:.2f} m {} of center'.format(curvature_rad, abs(base_pos_offset), 'left')
+        label_text += ' - detected = ' + str(detected)
         labels.append(label_text)
         
     img_trans_obj.plot_fitted_poly(poly_fits, labels)
-    #img_trans_obj.draw_viewport(True, True, True, True)
+    img_trans_obj.set_labels(labels)
+    img_trans_obj.draw_viewport(True, False, True, True)
     img_trans_obj.plot_comparison(birds_eye=False)
     
     return    
@@ -215,8 +225,8 @@ def main():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)  
     
-    #process_movie('challenge_video.mp4')
-    load_and_process_test_images()
+    process_movie('challenge_video.mp4')
+    #load_and_process_test_images()
     
     return
     
