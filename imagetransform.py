@@ -589,7 +589,7 @@ class ImageTransform(object):
 
 
 
-    def process_images(self, pass_grade_grad=0.4, pass_grade_color=0.1, blur_kernel=3, blur_thresh=125): 
+    def process_images(self, pass_grade_grad=0.4, pass_grade_color=0.6, blur_kernel=3, blur_thresh=125): 
         """
         processes images and creates binary processed images
         pass_grade: passing grade for pixel values give a scale of [0,1]
@@ -626,31 +626,43 @@ class ImageTransform(object):
         
         # Combine all color-based binary images together - weighted sum
         img_binary_color = []
-        img_binary_color.append(weight_arr_color[0]  * self.get_R_thresh(thresh=(185,255)))
-        img_binary_color.append(weight_arr_color[1]  * self.get_G_thresh(thresh=(130,255)))
+        img_binary_color.append(weight_arr_color[0]  * self.get_R_thresh(thresh=(220,255)))
+        img_binary_color.append(weight_arr_color[1]  * self.get_G_thresh(thresh=(190,255)))
         img_binary_color.append(weight_arr_color[2]  * self.get_B_thresh(thresh=(100,255)))
-        img_binary_color.append(weight_arr_color[3]  * self.get_H_thresh(thresh=(10,120)))
-        img_binary_color.append(weight_arr_color[4]  * self.get_S_thresh(thresh=(20,255)))
+        img_binary_color.append(weight_arr_color[3]  * self.get_H_thresh(thresh=(20,50)))
+        img_binary_color.append(weight_arr_color[4]  * self.get_S_thresh(thresh=(100,255)))
         img_binary_color.append(weight_arr_color[5]  * self.get_L_thresh(thresh=(140,255)))
         img_binary_color.append(weight_arr_color[6] * self.get_gray_thresh(thresh=(180,255)))
         img_binary_color = np.asarray(img_binary_color)
         img_binary_color_sum = img_binary_color.sum(axis=0)
+        plt.imshow(img_binary_color_sum[0])
         
-        # creating a procssed binary image    
-        img_post = []    
-        for img_grad, img_color in zip(img_binary_grad_sum, img_binary_color_sum): 
+        # creating a procssed binary image based on gradations   
+        img_post_grad = []    
+        for img_grad in img_binary_grad_sum: 
             max_pix_grad = sum(weight_arr_grad)
-            max_pix_color = sum(weight_arr_color)
-            img_post.append(np.zeros_like(img_grad.astype('uint8')))    
-            img_post[-1][(img_grad/max_pix_grad >= pass_grade_grad) & (img_color/max_pix_color >= pass_grade_color)] = 255
+            img_post_grad.append(np.zeros_like(img_grad.astype('uint8')))    
+            img_post_grad[-1][(img_grad/max_pix_grad >= pass_grade_grad)] = 255
             # apply gaussian blur to reduce isolated pixels           
-            img_post[-1] = cv2.GaussianBlur(img_post[-1], (blur_kernel, blur_kernel), 0)
-            img_post[-1][img_post[-1]>blur_thresh] = 255
-            img_post[-1][img_post[-1]<=blur_thresh] = 0
-        img_post = np.asarray(img_post)
+            img_post_grad[-1] = cv2.GaussianBlur(img_post_grad[-1], (blur_kernel, blur_kernel), 0)
+            img_post_grad[-1][img_post_grad[-1]>blur_thresh] = 255
+            img_post_grad[-1][img_post_grad[-1]<=blur_thresh] = 0
+        img_post_grad = np.asarray(img_post_grad)
+        
+        # creating a procssed binary image based on colors
+        img_post_color = []    
+        for img_color in img_binary_color_sum: 
+            max_pix_color = sum(weight_arr_color)
+            img_post_color.append(np.zeros_like(img_grad.astype('uint8')))    
+            img_post_color[-1][(img_color/max_pix_color >= pass_grade_color)] = 255
+            # apply gaussian blur to reduce isolated pixels           
+            img_post_color[-1] = cv2.GaussianBlur(img_post_color[-1], (blur_kernel, blur_kernel), 0)
+            img_post_color[-1][img_post_color[-1]>blur_thresh] = 255
+            img_post_color[-1][img_post_color[-1]<=blur_thresh] = 0
+        img_post_color = np.asarray(img_post_color)
                
         # saving processed images to the iamge transform object
-        self.processed_images = np.copy(img_post)
+        self.processed_images = np.copy(img_post_color)
         
         
         

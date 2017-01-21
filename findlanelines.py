@@ -134,13 +134,11 @@ def replace_frame(frame_img):
     left_lane.add_results(result[0][0], detected)
     right_lane.add_results(result[0][1], detected)
     
-    poly_fit_list = [left_lane.poly_fit_average, right_lane.poly_fit_average]
+    poly_fit_list = [left_lane.get_best_poly_fit(), right_lane.get_best_poly_fit()]
     
-    if left_lane.base_pos_average is not None and right_lane.base_pos_average is not None:
-        # calculating the average base position and curvature radius
-        base_pos_offset = np.mean((left_lane.base_pos_average, right_lane.base_pos_average))
-        curvature_rad = np.mean((left_lane.curve_rad_average, right_lane.curve_rad_average))
-        
+    if poly_fit_list[0] is not None and poly_fit_list[1] is not None:
+        base_pos_offset = np.mean((left_lane.get_best_pos(), right_lane.get_best_pos()))
+        curvature_rad = np.mean((left_lane.get_best_curve_rad(), right_lane.get_best_curve_rad()))
         # set the appropriate text to be printed on the frame
         if base_pos_offset>0:
             label_text = 'Radius of Curvature = {:.1f} m - Vehicle is {:.2f} m {} of center'.format(curvature_rad, abs(base_pos_offset), 'right')
@@ -190,7 +188,7 @@ def load_and_process_test_images():
         # automatic check to see if lane lines are in fact detected:
         # check to see that curvatures for left and right lanes are not far apart
         curve_ratio = max(result[0]['curve_rad'],result[1]['curve_rad']) / min(result[0]['curve_rad'],result[1]['curve_rad'])
-        detected = (curve_ratio<=3.3)    
+        detected = (curve_ratio<=3.5)    
         # check to see that lanes are separated by the right amount of distance
         dist = result[0]['fitted_xvals']-result[1]['fitted_xvals']
         detected = detected and (dist.max()<=4.1) and (dist.min()>=1.1)      
@@ -225,8 +223,8 @@ def main():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)  
     
-    process_movie('challenge_video.mp4')
-    #load_and_process_test_images()
+    #process_movie('challenge_video.mp4')
+    load_and_process_test_images()
     
     return
     

@@ -164,5 +164,28 @@ class LaneLine(object):
                 self.__init__
     
 
+    def get_best_pos(self):        
+        best_pos = None
+        if self._detected:
+            best_pos = self._base_pos_current
+        elif self._base_pos_average is not None:
+            best_pos = self._base_pos_average
+        return best_pos
         
         
+    def get_best_curve_rad(self):        
+        best_curve = None
+        if self._detected:
+            best_curve = self._curve_rad_current
+        elif self._curve_rad_average is not None:
+            best_curve = self._curve_rad_average
+        return best_curve   
+        
+        
+    def get_best_poly_fit(self):        
+        best_poly = None
+        if self._detected:
+            best_poly = self.poly_fit_current
+        elif self.poly_fit_average is not None:
+            best_poly = self.poly_fit_average
+        return best_poly
