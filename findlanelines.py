@@ -20,7 +20,7 @@ right_lane = LaneLine()
 cam_matrix = None
 dist_matrix = None
 
-from_computer_1 = True
+from_computer_1 = False
 if from_computer_1:
     # when working from computer 1
     cal_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/camera_cal/"
@@ -99,7 +99,7 @@ def calibrate_camera_from_path(cal_path, nx, ny, save_with_corners=False, save_u
 def load_test_images():
     
     # load all test images
-    f_names = glob.glob(tst_dir+'*.png')
+    f_names = glob.glob(tst_dir+'*.jpg')
     images = []
     for idx, fname in enumerate(f_names):
         img = cv2.imread(fname)
@@ -181,8 +181,8 @@ def load_and_process_test_images():
     img_trans_obj.process_images()
     
     img_trans_obj.to_birds_eye(original=True, processed=True)
-    results = img_trans_obj.detect_lanes(verbose=True)
-
+    results = img_trans_obj.detect_lanes(verbose=True) 
+    
     poly_fits = []
     labels = []    
     for result in results:

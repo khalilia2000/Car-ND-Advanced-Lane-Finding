@@ -287,7 +287,7 @@ class ImageTransform(object):
         
   
 
-    def get_canny(self, thresh=(10,25)):
+    def get_canny(self, thresh=(53,55)):
         # only works on gray images
         self.to_gray()
         # calculate canney edge transform
@@ -301,7 +301,7 @@ class ImageTransform(object):
     
     
     
-    def get_dir_sobel_thresh(self, orient='x', sobel_kernel=2, thresh=(0, 255)):
+    def get_dir_sobel_thresh(self, orient='x', sobel_kernel=2, thresh=(0, 255), blur_kernel=9, blur_thresh=0.65):
         '''
         Calculates directional gradient, and applies threshold. returns a binary image
         img: grayscaled image
@@ -323,12 +323,16 @@ class ImageTransform(object):
             # forming the binary image based on thresholds
             sbinary.append(np.zeros_like(abs_scaled_sobel))
             sbinary[-1][(abs_scaled_sobel >= thresh[0]) & (abs_scaled_sobel <= thresh[1])] = 1
+            # apply gaussian blur to reduce             
+            sbinary[-1] = cv2.GaussianBlur(sbinary[-1], (blur_kernel, blur_kernel), 0)
+            sbinary[-1][sbinary[-1]>blur_thresh] = 1
+            sbinary[-1][sbinary[-1]<=blur_thresh] = 0
         sbinary = np.asarray(sbinary)
         return sbinary
   
     
     
-    def get_mag_sobel_thresh(self, sobel_kernel=3, thresh=(0, 255)):
+    def get_mag_sobel_thresh(self, sobel_kernel=3, thresh=(0, 255), blur_kernel=9, blur_thresh=0.65):
         '''
         Calculates the magnitude of sobel gradient, and applies threshold. returns a binary image
         img: original image
@@ -348,12 +352,16 @@ class ImageTransform(object):
             # forming the binary image based on thresholds
             sbinary.append(np.zeros_like(scaled_sobel))
             sbinary[-1][(scaled_sobel >= thresh[0]) & (scaled_sobel <= thresh[1])] = 1
+            # apply gaussian blur to reduce             
+            sbinary[-1] = cv2.GaussianBlur(sbinary[-1], (blur_kernel, blur_kernel), 0)
+            sbinary[-1][sbinary[-1]>blur_thresh] = 1
+            sbinary[-1][sbinary[-1]<=blur_thresh] = 0
         sbinary = np.asarray(sbinary)
         return sbinary
    
   
   
-    def get_angle_sobel_thresh(self, sobel_kernel=3, thresh=(0, np.pi/2)):
+    def get_angle_sobel_thresh(self, sobel_kernel=3, thresh=(0, np.pi/2), blur_kernel=9, blur_thresh=0.65):
         '''
         Calculates the direction of sobel gradient, and applies threshold. returns a binary image
         img: original image
@@ -373,6 +381,10 @@ class ImageTransform(object):
             # forming the binary image based on thresholds
             sbinary.append(np.zeros_like(dir_sobel))
             sbinary[-1][(dir_sobel >= thresh[0]) & (dir_sobel <= thresh[1])] = 1
+            # apply gaussian blur to reduce             
+            sbinary[-1] = cv2.GaussianBlur(sbinary[-1], (blur_kernel, blur_kernel), 0)
+            sbinary[-1][sbinary[-1]>blur_thresh] = 1
+            sbinary[-1][sbinary[-1]<=blur_thresh] = 0
         sbinary = np.asarray(sbinary)
         return sbinary
 
@@ -577,50 +589,64 @@ class ImageTransform(object):
 
 
 
-    def process_images(self, pass_grade=0.56):
+    def process_images(self, pass_grade_grad=0.4, pass_grade_color=0.1, blur_kernel=3, blur_thresh=125): 
         """
         processes images and creates binary processed images
         pass_grade: passing grade for pixel values give a scale of [0,1]
         """
     
         # Assign weights for the voting process for each binary contribution
-        weight_arr = [0.2, #canny
-                      0.9, #ast
-                      0.9, #mast            
-                      1.0, #dst_x           
-                      1.0, #dst_y           
-                      0.6, #r channel       
-                      0.6, #g channel       
-                      0.3, #b channel       
-                      0.5, #h channel
-                      1.0, #s channel
-                      0.5, #l channel
-                      0.5] #gray            
+        # of the gradient-baed inputs
+        weight_arr_grad = [1.5, #canny 
+                           1.2, #ast    
+                           0.8, #mast   
+                           0.8, #dst_x  
+                           0.8] #dst_y  
+        
+        # Assign weights for the voting process for each binary contribution
+        # of the color-baed inputs                               
+        weight_arr_color = [1.2, #r channel
+                            1.7, #g channel
+                            0.8, #b channel
+                            1.7, #h channel
+                            1.0, #s channel
+                            1.7, #l channel
+                            1.0] #gray
   
         
-        # Combine all binary images together - weighted sum
-        img_binary = []
-        img_binary.append(weight_arr[0]  * self.get_canny())
-        img_binary.append(weight_arr[1]  * self.get_angle_sobel_thresh(thresh=(0.8,1.2)))
-        img_binary.append(weight_arr[2]  * self.get_mag_sobel_thresh(thresh=(5,100)))
-        img_binary.append(weight_arr[3]  * self.get_dir_sobel_thresh(orient='x',thresh=(4,110)))
-        img_binary.append(weight_arr[4]  * self.get_dir_sobel_thresh(orient='y',thresh=(4,110)))
-        img_binary.append(weight_arr[5]  * self.get_R_thresh(thresh=(185,255)))
-        img_binary.append(weight_arr[6]  * self.get_G_thresh(thresh=(130,255)))
-        img_binary.append(weight_arr[7]  * self.get_B_thresh(thresh=(90,255)))
-        img_binary.append(weight_arr[8]  * self.get_H_thresh(thresh=(15,120)))
-        img_binary.append(weight_arr[9]  * self.get_S_thresh(thresh=(90,255)))
-        img_binary.append(weight_arr[10]  * self.get_L_thresh(thresh=(110,255)))
-        img_binary.append(weight_arr[11] * self.get_gray_thresh(thresh=(180,255)))
-        img_binary = np.asarray(img_binary)
-        img_binary_sum = img_binary.sum(axis=0)
+        # Combine all gradient-based binary images together - weighted sum
+        img_binary_grad = []
+        img_binary_grad.append(weight_arr_grad[0]  * self.get_canny(thresh=(53,55)))
+        img_binary_grad.append(weight_arr_grad[1]  * self.get_angle_sobel_thresh(sobel_kernel=3, thresh=(0.8, 1.2), blur_kernel=9, blur_thresh=0.65))
+        img_binary_grad.append(weight_arr_grad[2]  * self.get_mag_sobel_thresh(thresh=(10,100), blur_kernel=9, blur_thresh=0.99))
+        img_binary_grad.append(weight_arr_grad[3]  * self.get_dir_sobel_thresh(orient='x',thresh=(10,110), blur_kernel=9, blur_thresh=0.5))
+        img_binary_grad.append(weight_arr_grad[4]  * self.get_dir_sobel_thresh(orient='y',thresh=(10,110), blur_kernel=9, blur_thresh=0.7))
+        img_binary_grad = np.asarray(img_binary_grad)
+        img_binary_grad_sum = img_binary_grad.sum(axis=0)
+        
+        # Combine all color-based binary images together - weighted sum
+        img_binary_color = []
+        img_binary_color.append(weight_arr_color[0]  * self.get_R_thresh(thresh=(185,255)))
+        img_binary_color.append(weight_arr_color[1]  * self.get_G_thresh(thresh=(130,255)))
+        img_binary_color.append(weight_arr_color[2]  * self.get_B_thresh(thresh=(100,255)))
+        img_binary_color.append(weight_arr_color[3]  * self.get_H_thresh(thresh=(10,120)))
+        img_binary_color.append(weight_arr_color[4]  * self.get_S_thresh(thresh=(20,255)))
+        img_binary_color.append(weight_arr_color[5]  * self.get_L_thresh(thresh=(140,255)))
+        img_binary_color.append(weight_arr_color[6] * self.get_gray_thresh(thresh=(180,255)))
+        img_binary_color = np.asarray(img_binary_color)
+        img_binary_color_sum = img_binary_color.sum(axis=0)
         
         # creating a procssed binary image    
         img_post = []    
-        for img in img_binary_sum: 
-            max_pix = img.max()
-            img_post.append(np.zeros_like(img.astype('uint8')))    
-            img_post[-1][img/max_pix >= pass_grade] = 255
+        for img_grad, img_color in zip(img_binary_grad_sum, img_binary_color_sum): 
+            max_pix_grad = sum(weight_arr_grad)
+            max_pix_color = sum(weight_arr_color)
+            img_post.append(np.zeros_like(img_grad.astype('uint8')))    
+            img_post[-1][(img_grad/max_pix_grad >= pass_grade_grad) & (img_color/max_pix_color >= pass_grade_color)] = 255
+            # apply gaussian blur to reduce isolated pixels           
+            img_post[-1] = cv2.GaussianBlur(img_post[-1], (blur_kernel, blur_kernel), 0)
+            img_post[-1][img_post[-1]>blur_thresh] = 255
+            img_post[-1][img_post[-1]<=blur_thresh] = 0
         img_post = np.asarray(img_post)
                
         # saving processed images to the iamge transform object
