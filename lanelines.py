@@ -51,7 +51,11 @@ class LaneLine(object):
         self._yvals = None
         
         #number of interations to track
-        self._num_iter = 5
+        self._num_iter = 3
+        
+        #keep track of ratios
+        self._ratio1_list = []
+        self._ratio2_list = []
         
     
     @property
@@ -100,17 +104,20 @@ class LaneLine(object):
         
         # set lane detection flag       
         # check to see that curvature is not far apart from previous curvatures
+        ratio1 = 0
         if self._curve_rad_average is not None:
-            ratio = max(result['curve_rad'],self._curve_rad_average) / min(result['curve_rad'],self._curve_rad_average)
-            self._detected = self._detected and (ratio <= 1.3)
+            ratio1 = max(result['curve_rad'],self.get_best_curve_rad()) / min(result['curve_rad'],self.get_best_curve_rad())
+            self._detected = self._detected and (ratio1 <= 2.2)
+        self._ratio1_list.append(ratio1)
         
         # check to see that lanes are roughply parallel to the previous find
-        if len(self._fitted_xvals_list) > 0:
-            ratio = np.max((result['fitted_xvals'],
-                            self._fitted_xvals_list[-1]),axis=0) / np.min((result['fitted_xvals'],
-                                                                            self._fitted_xvals_list[-1]),axis=0)
-            self._detected = self._detected and (ratio.min()>=0.5) and (ratio.max()<=2.0)
+        ratio2 = 0
+        if self._base_pos_average is not None:
+            ratio2 = max(result['base_pos'],self.get_best_pos()) / min(result['base_pos'],self.get_best_pos())
+            self._detected = self._detected and (ratio2.max()<=1.4)
+        self._ratio2_list.append(ratio1)
         
+        #self._detected = detected
             
         # add the results to the object if good quality is established
         if self._detected:
@@ -184,8 +191,8 @@ class LaneLine(object):
         
     def get_best_poly_fit(self):        
         best_poly = None
-        if self._detected:
-            best_poly = self.poly_fit_current
-        elif self.poly_fit_average is not None:
+        if self.poly_fit_average is not None:
             best_poly = self.poly_fit_average
+        elif self._detected:
+            best_poly = self.poly_fit_current
         return best_poly

@@ -50,8 +50,8 @@ class ImageTransform(object):
         self._p_3 = np.float32([[0.90,1.0]])
         # q0 to q3 form the destination viewport
         self._q_0 = np.float32([[0.20,1.0]])
-        self._q_1 = np.float32([[0.20,0.2]])
-        self._q_2 = np.float32([[0.80,0.2]])
+        self._q_1 = np.float32([[0.20,0.25]])
+        self._q_2 = np.float32([[0.80,0.25]])
         self._q_3 = np.float32([[0.80,1.0]])
         #
         # apply gaussian blura and camera undistortion, and convert to RGB
@@ -301,7 +301,7 @@ class ImageTransform(object):
     
     
     
-    def get_dir_sobel_thresh(self, orient='x', sobel_kernel=2, thresh=(0, 255), blur_kernel=9, blur_thresh=0.65):
+    def get_dir_sobel_thresh(self, orient='x', sobel_kernel=2, thresh=(0, 255)):
         '''
         Calculates directional gradient, and applies threshold. returns a binary image
         img: grayscaled image
@@ -323,16 +323,12 @@ class ImageTransform(object):
             # forming the binary image based on thresholds
             sbinary.append(np.zeros_like(abs_scaled_sobel))
             sbinary[-1][(abs_scaled_sobel >= thresh[0]) & (abs_scaled_sobel <= thresh[1])] = 1
-            # apply gaussian blur to reduce             
-            sbinary[-1] = cv2.GaussianBlur(sbinary[-1], (blur_kernel, blur_kernel), 0)
-            sbinary[-1][sbinary[-1]>blur_thresh] = 1
-            sbinary[-1][sbinary[-1]<=blur_thresh] = 0
         sbinary = np.asarray(sbinary)
         return sbinary
   
     
     
-    def get_mag_sobel_thresh(self, sobel_kernel=3, thresh=(0, 255), blur_kernel=9, blur_thresh=0.65):
+    def get_mag_sobel_thresh(self, sobel_kernel=3, thresh=(0, 255)):
         '''
         Calculates the magnitude of sobel gradient, and applies threshold. returns a binary image
         img: original image
@@ -352,10 +348,6 @@ class ImageTransform(object):
             # forming the binary image based on thresholds
             sbinary.append(np.zeros_like(scaled_sobel))
             sbinary[-1][(scaled_sobel >= thresh[0]) & (scaled_sobel <= thresh[1])] = 1
-            # apply gaussian blur to reduce             
-            sbinary[-1] = cv2.GaussianBlur(sbinary[-1], (blur_kernel, blur_kernel), 0)
-            sbinary[-1][sbinary[-1]>blur_thresh] = 1
-            sbinary[-1][sbinary[-1]<=blur_thresh] = 0
         sbinary = np.asarray(sbinary)
         return sbinary
    
@@ -589,7 +581,7 @@ class ImageTransform(object):
 
 
 
-    def process_images(self, pass_grade_grad=0.4, pass_grade_color=0.6, blur_kernel=3, blur_thresh=125): 
+    def process_images(self, pass_grade_grad=0.35, pass_grade_color=0.59, blur_kernel=3, blur_thresh=135): 
         """
         processes images and creates binary processed images
         pass_grade: passing grade for pixel values give a scale of [0,1]
@@ -598,10 +590,10 @@ class ImageTransform(object):
         # Assign weights for the voting process for each binary contribution
         # of the gradient-baed inputs
         weight_arr_grad = [1.5, #canny 
-                           1.2, #ast    
-                           0.8, #mast   
-                           0.8, #dst_x  
-                           0.8] #dst_y  
+                           1.0, #ast    
+                           1.0, #mast   
+                           1.5, #dst_x  
+                           1.0] #dst_y  
         
         # Assign weights for the voting process for each binary contribution
         # of the color-baed inputs                               
@@ -616,11 +608,11 @@ class ImageTransform(object):
         
         # Combine all gradient-based binary images together - weighted sum
         img_binary_grad = []
-        img_binary_grad.append(weight_arr_grad[0]  * self.get_canny(thresh=(53,55)))
-        img_binary_grad.append(weight_arr_grad[1]  * self.get_angle_sobel_thresh(sobel_kernel=3, thresh=(0.8, 1.2), blur_kernel=9, blur_thresh=0.65))
-        img_binary_grad.append(weight_arr_grad[2]  * self.get_mag_sobel_thresh(thresh=(10,100), blur_kernel=9, blur_thresh=0.99))
-        img_binary_grad.append(weight_arr_grad[3]  * self.get_dir_sobel_thresh(orient='x',thresh=(10,110), blur_kernel=9, blur_thresh=0.5))
-        img_binary_grad.append(weight_arr_grad[4]  * self.get_dir_sobel_thresh(orient='y',thresh=(10,110), blur_kernel=9, blur_thresh=0.7))
+        img_binary_grad.append(weight_arr_grad[0]  * self.get_canny(thresh=(145,150)))
+        img_binary_grad.append(weight_arr_grad[1]  * self.get_angle_sobel_thresh(sobel_kernel=3, thresh=(0.8, 1.2), blur_kernel=3, blur_thresh=0.8))
+        img_binary_grad.append(weight_arr_grad[2]  * self.get_mag_sobel_thresh(thresh=(30,100)))
+        img_binary_grad.append(weight_arr_grad[3]  * self.get_dir_sobel_thresh(orient='x',thresh=(35,110)))
+        img_binary_grad.append(weight_arr_grad[4]  * self.get_dir_sobel_thresh(orient='y',thresh=(25,110)))
         img_binary_grad = np.asarray(img_binary_grad)
         img_binary_grad_sum = img_binary_grad.sum(axis=0)
         
@@ -635,7 +627,6 @@ class ImageTransform(object):
         img_binary_color.append(weight_arr_color[6] * self.get_gray_thresh(thresh=(180,255)))
         img_binary_color = np.asarray(img_binary_color)
         img_binary_color_sum = img_binary_color.sum(axis=0)
-        plt.imshow(img_binary_color_sum[0])
         
         # creating a procssed binary image based on gradations   
         img_post_grad = []    
@@ -653,7 +644,7 @@ class ImageTransform(object):
         img_post_color = []    
         for img_color in img_binary_color_sum: 
             max_pix_color = sum(weight_arr_color)
-            img_post_color.append(np.zeros_like(img_grad.astype('uint8')))    
+            img_post_color.append(np.zeros_like(img_color.astype('uint8')))    
             img_post_color[-1][(img_color/max_pix_color >= pass_grade_color)] = 255
             # apply gaussian blur to reduce isolated pixels           
             img_post_color[-1] = cv2.GaussianBlur(img_post_color[-1], (blur_kernel, blur_kernel), 0)
@@ -662,7 +653,13 @@ class ImageTransform(object):
         img_post_color = np.asarray(img_post_color)
                
         # saving processed images to the iamge transform object
-        self.processed_images = np.copy(img_post_color)
+        img_result_list = []
+        for img1, img2 in zip(img_post_grad, img_post_color):
+            img_result_list.append(np.zeros_like(img1))
+            img_result_list[-1][(img1>0) | (img2>0)]=255
+        img_result_list = np.asarray(img_result_list)
+            
+        self.processed_images = np.copy(img_result_list)
         
         
         

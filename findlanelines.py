@@ -14,13 +14,15 @@ from moviepy.editor import VideoFileClip
 from imagetransform import ImageTransform
 from lanelines import LaneLine
 
+import matplotlib.pyplot as plt
+
 # define global variables
 left_lane = LaneLine()
 right_lane = LaneLine()
 cam_matrix = None
 dist_matrix = None
 
-from_computer_1 = False
+from_computer_1 = True
 if from_computer_1:
     # when working from computer 1
     cal_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/camera_cal/"
@@ -99,7 +101,7 @@ def calibrate_camera_from_path(cal_path, nx, ny, save_with_corners=False, save_u
 def load_test_images():
     
     # load all test images
-    f_names = glob.glob(tst_dir+'*.jpg')
+    f_names = glob.glob(tst_dir+'*.png')
     images = []
     for idx, fname in enumerate(f_names):
         img = cv2.imread(fname)
@@ -124,11 +126,11 @@ def replace_frame(frame_img):
     
     # automatic check to see if lane lines are in fact detected:
     curve_ratio = max(result[0][0]['curve_rad'],result[0][1]['curve_rad']) / min(result[0][0]['curve_rad'],result[0][1]['curve_rad'])
-    detected = (curve_ratio<=3.3)    
+    detected = (curve_ratio<=3.5)    
     
     # check to see that lanes are separated by the right amount of distance
     dist = result[0][0]['fitted_xvals']-result[0][1]['fitted_xvals']
-    detected = detected and (dist.max()<=4.1) and (dist.min()>=1.1)
+    detected = detected and (dist.max()<=4.5) and (dist.min()>=1.1)
     
     # initialize left and right lane line objects
     left_lane.add_results(result[0][0], detected)
@@ -136,9 +138,11 @@ def replace_frame(frame_img):
     
     poly_fit_list = [left_lane.get_best_poly_fit(), right_lane.get_best_poly_fit()]
     
-    if poly_fit_list[0] is not None and poly_fit_list[1] is not None:
+    if left_lane.get_best_pos() is not None and right_lane.get_best_pos() is not None:
+        # calculating the average base position and curvature radius
         base_pos_offset = np.mean((left_lane.get_best_pos(), right_lane.get_best_pos()))
         curvature_rad = np.mean((left_lane.get_best_curve_rad(), right_lane.get_best_curve_rad()))
+        
         # set the appropriate text to be printed on the frame
         if base_pos_offset>0:
             label_text = 'Radius of Curvature = {:.1f} m - Vehicle is {:.2f} m {} of center'.format(curvature_rad, abs(base_pos_offset), 'right')
@@ -163,6 +167,7 @@ def process_movie(fname):
     movie_clip = VideoFileClip(work_dir+fname)
     processed_clip = movie_clip.fl_image(replace_frame)
     processed_clip.write_videofile(work_dir+'AK_'+fname, audio=False, verbose=True, threads=6)
+    
     return
 
 
@@ -179,8 +184,8 @@ def load_and_process_test_images():
     img_trans_obj.process_images()
     
     img_trans_obj.to_birds_eye(original=True, processed=True)
-    results = img_trans_obj.detect_lanes(verbose=True) 
-    
+    results = img_trans_obj.detect_lanes(verbose=True)
+
     poly_fits = []
     labels = []    
     for result in results:
@@ -191,7 +196,7 @@ def load_and_process_test_images():
         detected = (curve_ratio<=3.5)    
         # check to see that lanes are separated by the right amount of distance
         dist = result[0]['fitted_xvals']-result[1]['fitted_xvals']
-        detected = detected and (dist.max()<=4.1) and (dist.min()>=1.1)      
+        detected = detected and (dist.max()<=4.5) and (dist.min()>=1.1)      
         print(curve_ratio, dist.max(), dist.min(), detected)
                 
         poly_fits.append([result[0]['poly_fit'],result[1]['poly_fit']])
@@ -223,8 +228,8 @@ def main():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)  
     
-    #process_movie('challenge_video.mp4')
-    load_and_process_test_images()
+    process_movie('project_video.mp4')
+    #load_and_process_test_images()
     
     return
     
