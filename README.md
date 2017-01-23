@@ -1,5 +1,4 @@
-##Writeup Template
-###You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
+# Car-ND-Advanced-Lane-Finding
 
 ---
 
@@ -27,21 +26,34 @@ The goals / steps of this project are the following:
 [video1]: ./project_video.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
-###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
-
+###Here the rubric points are considered individually and descriptions are provided on how I addressed each point in my implementation.  
 ---
 ###Writeup / README
 
-####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
+####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.   
 
-You're reading it!
+I did use the template provided in the course notes and modified it. You're reading the README.md!
 ###Camera Calibration
 
 ####1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
+The code for this step is contained in the function calibrate_camera_from_path (lines #41 through #100 of the file named `findlanelines.py`).  
 
-I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
+This function gets a path as input along with number of chess board corners in x and y directions and returns the camera and distortion matrices. It also has additionl kwargs (i.e. dave_with_corners and save_undistort), that can be used to save the transformed images.
+Here is how the function works:  
+1- "opbject points" are prepared, which will be the (x, y, z) coordinates of the chessboard corners in the world.Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image. Thus, `objp` is just a replicated array of coordinates. `objpoints` and `imgpoints` are the initialized as empty lists: `objpoints` will be appended with a copy of `objp` every time the program successfully detects all chessboard corners in a test image. `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection;  
+2- program uses the glob library to read all files fitting `calibration*.jpg` naming conventions;  
+3- for each image that is read, `cv2.findChessboardCorners()` is called to find the chessboard corners;  
+4- if save_with_corners kwarg is True, then file is saved with chessboard corners drawn on it;  
+5- function `cv2.calibrateCamera()` is then called with 'objpoints' and 'imgpoints' and the camera and distortion matrices are calcualted;  
+6- if save_undistort kwarg is True, then file is undistorted using `cv2.undistort()` function and then saved;  
+7- the function returns the camera matrix and distortion matrix at the end.  
+
+Examples of the original image, original image with chessboard corners drawn on it, and undistorted image are shown below:  
+
+![alt text][image1]
+![alt text][image2]
+![alt text][image3]
 
 I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
 
