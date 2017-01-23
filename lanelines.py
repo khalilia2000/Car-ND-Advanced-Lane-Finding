@@ -13,45 +13,39 @@ class LaneLine(object):
     
     def __init__(self):
         
-        # was the line detected in the last iteration?
-        self._detected = True  
-        # number of consecutive undetected iterations
-        self._num_undetected = 0
-        # number of the iterations between the last two successful detections
-        self._num_delta_iters = None
         
-        # x values of the last n fits of the line
-        self._fitted_xvals_list = [] 
-        #average x values of the fitted line over the last n iterations
-        self._fitted_xvals_average = None     
+        # variables keepting track of lane detection        
+        self._detected = True               # was the line detected in the last iteration?
+        self._num_undetected = 0            # number of consecutive undetected iterations
+        self._num_delta_iters = None        # number of the iterations between the last two successful detections
         
-        #polynomial coefficients for the last n fits of the line
-        self._poly_fit_list = []  
-        #polynomial coefficients averaged over the last n fits of the line
-        self._poly_fit_average = None  
-        #polynomial coefficients for the most recent fit
-        self._poly_fit_current = None  
-        #difference in fit coefficients between last and new fits
-        self._poly_fit_diffs = np.array([0,0,0], dtype='float') 
+        # fitted x values of the polynomial fits        
+        self._fitted_xvals_list = []        # x values of the last n fits of the line
+        self._fitted_xvals_average = None   # average x values of the fitted line over the last n iterations
         
-        #radius of curvature of the line in some units
-        self._curve_rad_list = [] 
-        self._curve_rad_average = None
-        self._curve_rad_current = None
-        self._curve_rad_diff = 0
-        #distance in meters of vehicle center from the line
-        self._base_pos_list = []
-        self._base_pos_average = None 
-        self._base_pos_current = None 
-        self._base_pos_diff = 0
+        # polynomial fit coefficients        
+        self._poly_fit_list = []            # polynomial coefficients for the last n fits of the line
+        self._poly_fit_average = None       # polynomial coefficients averaged over the last n-1 fits of the line
+        self._poly_fit_current = None       # polynomial coefficients for the most recent fit
+        self._poly_fit_diffs = np.array([0,0,0], dtype='float')  # difference of values between average values between consecutive iterations
         
-        #x values for detected line pixels
-        self._xvals = None  
-        #y values for detected line pixels
-        self._yvals = None
+        # radius of curvature of the line in some units
+        self._curve_rad_list = []           # last n curvature radii of successful detections of lane
+        self._curve_rad_average = None      # average curvature radius of last n-1 detections of lane
+        self._curve_rad_current = None      # most recent curvature radius of lane that is detected
+        self._curve_rad_diff = 0            # difference of values between average values between consecutive iterations
+        # distance in meters of vehicle center from the line
+        self._base_pos_list = []            # last n position values of successful detections of lane
+        self._base_pos_average = None       # average position of last n-1 detections of lane
+        self._base_pos_current = None       # most recent position of lane that is detected
+        self._base_pos_diff = 0             # difference of values between average values between consecutive iterations
         
-        #number of interations to track
-        self._num_iter = 5
+        
+        self._xvals = None                  #x values for detected line pixels
+        self._yvals = None                  #y values for detected line pixels
+        
+        
+        self._num_iter = 5                  #number of interations to track
         
         
     
@@ -125,34 +119,35 @@ class LaneLine(object):
             self._fitted_xvals_list.append(result['fitted_xvals'])
             if len(self._fitted_xvals_list)>self._num_iter:                
                 self._fitted_xvals_list.pop(0)
-            self._fitted_xvals_average = np.mean(self._fitted_xvals_list, axis=0)
+            if len(self._fitted_xvals_list) >= 2:
+                self._fitted_xvals_average = np.mean(self._fitted_xvals_list[1:], axis=0) # averages n-1 elements taht are most recent
                         
             # update poly fits
             self._poly_fit_current = result['poly_fit']
             self._poly_fit_list.append(self._poly_fit_current) 
             if len(self._poly_fit_list)>self._num_iter:
                 self._poly_fit_list.pop(0)                
-            self._poly_fit_average = np.mean(self._poly_fit_list, axis=0)
             if len(self._poly_fit_list) >= 2:
-                self._poly_fit_diffs = self._poly_fit_list[-1]-self._poly_fit_list[-2]
+                self._poly_fit_average = np.mean(self._poly_fit_list[1:], axis=0) # averages n-1 elements taht are most recent
+                self._poly_fit_diffs = np.mean(self._poly_fit_list[1:], axis=0)-np.mean(self._poly_fit_list[:-1], axis=0)
             
             # update radius of curvature
             self._curve_rad_current = result['curve_rad']
             self._curve_rad_list.append(self._curve_rad_current)
             if len(self._curve_rad_list)>=self._num_iter:
                 self._curve_rad_list.pop(0)
-            self._curve_rad_average = np.mean(self._curve_rad_list, axis=0)
             if len(self._curve_rad_list) >= 2:
-                self._curve_rad_diff = self._curve_rad_list[-1]-self._curve_rad_list[-2]
+                self._curve_rad_average = np.mean(self._curve_rad_list[1:], axis=0)
+                self._curve_rad_diff = np.mean(self._curve_rad_list[1:], axis=0)-np.mean(self._curve_rad_list[:-1], axis=0)
             
             # update base position of lane lines
             self._base_pos_current = result['base_pos']
             self._base_pos_list.append(self._base_pos_current)
             if len(self._base_pos_list)>=self._num_iter:
                 self._base_pos_list.pop(0)
-            self._base_pos_average = np.mean(self._base_pos_list, axis=0)
             if len(self._base_pos_list) >= 2:
-                self._base_pos_diff = self._base_pos_list[-1]-self._base_pos_list[-2]
+                self._base_pos_average = np.mean(self._base_pos_list[1:], axis=0)
+                self._base_pos_diff = np.mean(self._base_pos_list[1:], axis=0)-np.mean(self._base_pos_list[:-1], axis=0)
             
             # set all x and y pixel points
             self._xvals = result['xvals']
@@ -162,32 +157,47 @@ class LaneLine(object):
             
             self._num_undetected += 1
             # if number of undetected iterations reaches an upper limit, resets the data
-            if self._num_undetected > self._num_iter*2:
+            if self._num_undetected > self._num_iter:
                 self.__init__
     
 
     def get_best_pos(self):        
         best_pos = None
         if self._detected:
-            best_pos = self._base_pos_current
-        elif self._base_pos_average is not None:
-            best_pos = self._base_pos_average
+            if self._base_pos_average is not None:
+                best_pos = self._base_pos_average
+            else:
+                best_pos = self._base_pos_current
+        else:
+            if (self._base_pos_average is not None) and (self._base_pos_diff is not None):
+                # extrapolate the position based on the direction / speed of the moving car
+                best_pos = self._base_pos_average + self._base_pos_diff * self._num_undetected / self._num_delta_iters
         return best_pos
         
         
     def get_best_curve_rad(self):        
         best_curve = None
         if self._detected:
-            best_curve = self._curve_rad_current
-        elif self._curve_rad_average is not None:
-            best_curve = self._curve_rad_average
+            if self._curve_rad_average is not None:
+                best_curve = self._curve_rad_average
+            else:
+                best_curve = self._curve_rad_current
+        else:
+            if (self._curve_rad_average is not None) and (self._curve_rad_diff is not None):
+                # extrapolate the curve_rad based on the direction / speed of the moving car
+                best_curve = self._curve_rad_average + self._curve_rad_diff * self._num_undetected / self._num_delta_iters
         return best_curve   
         
         
     def get_best_poly_fit(self):        
         best_poly = None
-        if self.poly_fit_average is not None:
-            best_poly = self.poly_fit_average
-        elif self._detected:
-            best_poly = self.poly_fit_current
+        if self._detected:
+            if self._poly_fit_average is not None:
+                best_poly = self._poly_fit_average
+            else: 
+                best_poly = self._poly_fit_current
+        else:
+            if (self._poly_fit_average is not None):  # note that poly_fit_diffs will never be None
+                # extrapolate the poly_fit based on the direction / speed of the moving car
+                best_poly = self._poly_fit_average + self._poly_fit_diffs * self._num_undetected / self._num_delta_iters  
         return best_poly
