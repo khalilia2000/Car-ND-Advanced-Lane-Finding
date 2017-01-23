@@ -622,12 +622,12 @@ class ImageTransform(object):
         
         # Combine all color-based binary images together - weighted sum
         img_binary_color = []
-        img_binary_color.append(weight_arr_color[0]  * self.get_R_thresh(thresh=(220,255)))
-        img_binary_color.append(weight_arr_color[1]  * self.get_G_thresh(thresh=(190,255)))
-        img_binary_color.append(weight_arr_color[2]  * self.get_B_thresh(thresh=(100,255)))
+        img_binary_color.append(weight_arr_color[0]  * self.get_R_thresh(thresh=(200,255)))
+        img_binary_color.append(weight_arr_color[1]  * self.get_G_thresh(thresh=(160,255)))
+        img_binary_color.append(weight_arr_color[2]  * self.get_B_thresh(thresh=(90,255)))
         img_binary_color.append(weight_arr_color[3]  * self.get_H_thresh(thresh=(20,50)))
-        img_binary_color.append(weight_arr_color[4]  * self.get_S_thresh(thresh=(100,255)))
-        img_binary_color.append(weight_arr_color[5]  * self.get_L_thresh(thresh=(140,255)))
+        img_binary_color.append(weight_arr_color[4]  * self.get_S_thresh(thresh=(80,255)))
+        img_binary_color.append(weight_arr_color[5]  * self.get_L_thresh(thresh=(130,255)))
         img_binary_color.append(weight_arr_color[6] * self.get_gray_thresh(thresh=(180,255)))
         img_binary_color = np.asarray(img_binary_color)
         img_binary_color_sum = img_binary_color.sum(axis=0)
@@ -685,10 +685,10 @@ class ImageTransform(object):
             res_img = np.zeros_like(img)    # revised image with lane lines plotted on it
             color_res_img = np.dstack((res_img, res_img, res_img)) # colored resulting image 
             min_x_margin = 80                  # margin around the centre to look for lane line pixels 
-            max_x_margin = 110
+            max_x_margin = 160
             x_margin_left = min_x_margin
             x_margin_right = min_x_margin
-            margin_multiplier = 1.1
+            margin_multiplier = 1.2
             num_horizontal_bands = 10       # number of hoirzontal bands used to trace the lane lines
             y_grid = np.linspace(0, img.shape[0], num_horizontal_bands, dtype='uint16') # horizontal band coordiantes
             y_grid = y_grid[::-1]           # reversing the order
@@ -743,7 +743,7 @@ class ImageTransform(object):
                     cv2.rectangle(res_img, (p1_x,p1_y), (p2_x,p2_y), [255,0,0],2)
                 
                 # moving the position of the left box based on what was found
-                if box_left_hist.max() >= 0.25*abs(to_y-from_y)*255:
+                if len(box_left_hist)!=0 and box_left_hist.max() >= 0.25*abs(to_y-from_y)*255:
                     box_left_hist_list = box_left_hist.tolist()
                     left_max_index_list = [i for i, x in enumerate(box_left_hist_list) if x==box_left_hist.max()]
                     left_pos_delta = left_max_index_list[len(left_max_index_list)//2]+max(left_pos-x_margin_left,0)-left_pos
@@ -773,7 +773,7 @@ class ImageTransform(object):
                     cv2.rectangle(res_img, (p1_x,p1_y), (p2_x,p2_y), [255,0,0],2)
                 
                 # moving the position of the right box based on what was found
-                if box_right_hist.max() >= 0.25*abs(to_y-from_y)*255:
+                if len(box_right_hist)!=0 and box_right_hist.max() >= 0.25*abs(to_y-from_y)*255:
                     box_right_hist_list = box_right_hist.tolist()
                     right_max_index_list = [i for i, x in enumerate(box_right_hist_list) if x==box_right_hist.max()]
                     right_pos_delta = right_max_index_list[len(right_max_index_list)//2]+max(right_pos-x_margin_right,0)-right_pos

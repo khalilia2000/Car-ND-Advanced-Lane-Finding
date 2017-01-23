@@ -130,6 +130,7 @@ def replace_frame(frame_img):
     global frame_counter
     
     frame_counter += 1
+    cv2.imwrite(log_dir+'pre_'+str(frame_counter)+'.png',cv2.cvtColor(frame_img,cv2.COLOR_RGB2BGR))    
     
     img_trans_obj = ImageTransform(np.asarray([frame_img]), "", cam_matrix, dist_matrix, colorspec='RGB')
     img_trans_obj.process_images()
@@ -137,8 +138,7 @@ def replace_frame(frame_img):
     result = img_trans_obj.detect_lanes(prev_left_pos=left_lane.get_best_pos(), 
                                         prev_right_pos=right_lane.get_best_pos(), verbose=False)
     
-    
-    cv2.imwrite(log_dir+'pre_'+str(frame_counter)+'.png',cv2.cvtColor(frame_img,cv2.COLOR_RGB2BGR))    
+    #print(result[0][0]['base_pos'],result[0][1]['base_pos'])
     
     # automaticallu check to see if lane lines are in fact detected:
     # check to see if lanes are separated by correct distance - between 3.3 and 4.1 m
@@ -148,6 +148,9 @@ def replace_frame(frame_img):
     # check to see if the lanes are approximately parallel i.e. A and B similar    
     detected = detected and (abs(result[0][0]['poly_fit'][0]-result[0][1]['poly_fit'][0])<=0.0006)
     detected = detected and (abs(result[0][0]['poly_fit'][1]-result[0][1]['poly_fit'][1])<=0.5)  
+    # check to see if a poly fit is returned
+    detected = detected and (result[0][0]['poly_fit'][0]!=0 or result[0][0]['poly_fit'][1]!=0 or result[0][0]['poly_fit'][2]!=0)
+    detected = detected and (result[0][1]['poly_fit'][0]!=0 or result[0][1]['poly_fit'][1]!=0 or result[0][1]['poly_fit'][2]!=0)
     
     # create a log using a pandas DataFrame object for debugging purposes.
     log_df.loc[len(log_df)] = [result[0][0]['base_pos'],
@@ -224,7 +227,7 @@ def load_and_process_test_images():
     img_trans_obj.process_images()
     
     img_trans_obj.to_birds_eye(original=True, processed=True)
-    results = img_trans_obj.detect_lanes(prev_left_pos=1.487756618,prev_right_pos=-2.064239833,verbose=True)
+    results = img_trans_obj.detect_lanes(prev_left_pos=1.38285714286,prev_right_pos=-1.66711022077,verbose=True)
 
     poly_fits = []
     labels = []    
@@ -268,7 +271,7 @@ def main():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)  
     
-    process_movie('project_video.mp4')
+    process_movie('challenge_video.mp4')
     #load_and_process_test_images()
     
     return
