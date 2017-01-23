@@ -23,7 +23,7 @@ right_lane = LaneLine()
 cam_matrix = None
 dist_matrix = None
 
-from_computer_1 = True
+from_computer_1 = False
 if from_computer_1:
     # when working from computer 1
     cal_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/camera_cal/"
@@ -143,12 +143,13 @@ def replace_frame(frame_img):
     # automaticallu check to see if lane lines are in fact detected:
     # check to see if lanes are separated by correct distance - between 3.3 and 4.1 m
     detected = abs(abs(result[0][0]['base_pos']-result[0][1]['base_pos'])-3.7)<=0.4
-    # check to see if curvatures are similar between right and left lanes - Delta(1/curve_rad) <= 0.0005
-    detected = detected and (abs(1/result[0][0]['curve_rad']-1/result[0][1]['curve_rad'])<=0.0005)
+    # check to see if curvatures are similar between right and left lanes - Delta(1/curve_rad) <= 0.0006
+    detected = detected and (abs(1/result[0][0]['curve_rad']-1/result[0][1]['curve_rad'])<=0.0006)
     # check to see if the lanes are approximately parallel i.e. A and B similar    
-    detected = detected and (abs(result[0][0]['poly_fit'][0]-result[0][1]['poly_fit'][0])<=0.00075)
+    detected = detected and (abs(result[0][0]['poly_fit'][0]-result[0][1]['poly_fit'][0])<=0.0006)
     detected = detected and (abs(result[0][0]['poly_fit'][1]-result[0][1]['poly_fit'][1])<=0.5)  
     
+    # create a log using a pandas DataFrame object for debugging purposes.
     log_df.loc[len(log_df)] = [result[0][0]['base_pos'],
                                1/result[0][0]['curve_rad'],
                                result[0][0]['poly_fit'][0], 
@@ -267,8 +268,8 @@ def main():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)  
     
-    #process_movie('project_video.mp4')
-    load_and_process_test_images()
+    process_movie('project_video.mp4')
+    #load_and_process_test_images()
     
     return
     

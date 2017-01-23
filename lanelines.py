@@ -51,11 +51,8 @@ class LaneLine(object):
         self._yvals = None
         
         #number of interations to track
-        self._num_iter = 3
+        self._num_iter = 5
         
-        #keep track of ratios
-        self._ratio1_list = []
-        self._ratio2_list = []
         
     
     @property
@@ -100,24 +97,22 @@ class LaneLine(object):
             
     def add_results(self, result, detected):
         
+        # check that the result makes sense
         self._detected = detected
+        if detected is not None:
+            # check the position of the lane from the previous best location
+            if self.get_best_pos() is not None:
+                self._detected = self._detected and abs(result['base_pos']-self.get_best_pos())<=0.5
+            
+            # check to see that curvature is not far apart from previous curvatures
+            if self.get_best_curve_rad() is not None:
+                self._detected = self._detected and abs(1/result['curve_rad']-1/self.get_best_curve_rad())<=0.0006
+            
+            # check to see that poly_fit_0 and poly_fit_1 are not far apart from previous detection
+            if self.get_best_poly_fit() is not None:
+                self._detected = self._detected and abs(result['poly_fit'][0]-self.get_best_poly_fit()[0])<=0.0006
+                self._detected = self._detected and abs(result['poly_fit'][1]-self.get_best_poly_fit()[1])<=0.5
         
-        # set lane detection flag       
-        # check to see that curvature is not far apart from previous curvatures
-        ratio1 = 0
-        if self._curve_rad_average is not None:
-            ratio1 = max(result['curve_rad'],self.get_best_curve_rad()) / min(result['curve_rad'],self.get_best_curve_rad())
-            self._detected = self._detected and (ratio1 <= 2.2)
-        self._ratio1_list.append(ratio1)
-        
-        # check to see that lanes are roughply parallel to the previous find
-        ratio2 = 0
-        if self._base_pos_average is not None:
-            ratio2 = max(result['base_pos'],self.get_best_pos()) - min(result['base_pos'],self.get_best_pos())
-            self._detected = self._detected and (ratio2.max()<=2.5)
-        self._ratio2_list.append(ratio1)
-        
-        self._detected = detected
             
         # add the results to the object if good quality is established
         if self._detected:
