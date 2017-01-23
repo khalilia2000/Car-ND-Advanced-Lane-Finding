@@ -50,14 +50,18 @@ class ImageTransform(object):
         self._p_3 = np.float32([[0.90,1.0]])
         # q0 to q3 form the destination viewport
         self._q_0 = np.float32([[0.20,1.0]])
-        self._q_1 = np.float32([[0.20,0.25]])
-        self._q_2 = np.float32([[0.80,0.25]])
+        self._q_1 = np.float32([[0.20,0.3]])
+        self._q_2 = np.float32([[0.80,0.3]])
         self._q_3 = np.float32([[0.80,1.0]])
         #
         # apply gaussian blura and camera undistortion, and convert to RGB
         self.to_blur()
         self.to_undistort()
         self.to_RGB()
+        
+        # Define conversions in x and y from pixels space to meters
+        self._ym_per_pix = 30/720 # meters per pixel in y dimension
+        self._xm_per_pix = 3.7/700 # meteres per pixel in x dimension
       
   
   
@@ -680,7 +684,11 @@ class ImageTransform(object):
             # initializing local variables including copy of the image
             res_img = np.zeros_like(img)    # revised image with lane lines plotted on it
             color_res_img = np.dstack((res_img, res_img, res_img)) # colored resulting image 
-            x_margin = 100                  # margin around the centre to look for lane line pixels 
+            min_x_margin = 80                  # margin around the centre to look for lane line pixels 
+            max_x_margin = 110
+            x_margin_left = min_x_margin
+            x_margin_right = min_x_margin
+            margin_multiplier = 1.1
             num_horizontal_bands = 10       # number of hoirzontal bands used to trace the lane lines
             y_grid = np.linspace(0, img.shape[0], num_horizontal_bands, dtype='uint16') # horizontal band coordiantes
             y_grid = y_grid[::-1]           # reversing the order
@@ -698,7 +706,7 @@ class ImageTransform(object):
                 left_max_index_list = [i for i, x in enumerate(bottom_left_hist_list) if x==bottom_left_hist.max()]
                 left_pos = left_max_index_list[len(left_max_index_list)//2]
             else:
-                left_pos = prev_left_pos
+                left_pos = img.shape[1] // 2 - abs(int(prev_left_pos / self._xm_per_pix))
             left_pos_delta = 0
             
             # finding right lane - initial attempt
@@ -708,7 +716,7 @@ class ImageTransform(object):
                 right_max_index_list = [i for i, x in enumerate(bottom_right_hist_list) if x==bottom_right_hist.max()]
                 right_pos = right_max_index_list[len(right_max_index_list)//2]+img_width//2
             else:
-                right_pos = prev_right_pos
+                right_pos = img.shape[1] // 2 + abs(int(prev_right_pos / self._xm_per_pix))
             right_pos_delta = 0
             
             # Trace the lane lines from bottom of the image upward and detect lane pixels
@@ -718,58 +726,62 @@ class ImageTransform(object):
                 to_y = y_grid[i]
                 
                 # updating the left box for searching for lane points
-                box_left = img[from_y:to_y,max(left_pos-x_margin,0):min(left_pos+x_margin,img_width)]
-                res_img[from_y:to_y,max(left_pos-x_margin,0):min(left_pos+x_margin,img_width)] = box_left
+                box_left = img[from_y:to_y,max(left_pos-x_margin_left,0):min(left_pos+x_margin_left,img_width)]
+                res_img[from_y:to_y,max(left_pos-x_margin_left,0):min(left_pos+x_margin_left,img_width)] = box_left
                 box_left_hist = box_left.sum(axis=0)
                 
                 # adding coordinates of non-zero elements to the lists
                 left_lane_yvals += (np.nonzero(box_left)[0]+from_y).tolist()
-                left_lane_xvals += (np.nonzero(box_left)[1]+max(left_pos-x_margin,0)).tolist()
+                left_lane_xvals += (np.nonzero(box_left)[1]+max(left_pos-x_margin_left,0)).tolist()
                 
                 # for visualization and debuggin purposes
                 if verbose:
-                    p1_x = max(left_pos-x_margin,0)
+                    p1_x = max(left_pos-x_margin_left,0)
                     p1_y = from_y
-                    p2_x = left_pos+x_margin
+                    p2_x = left_pos+x_margin_left
                     p2_y = to_y
                     cv2.rectangle(res_img, (p1_x,p1_y), (p2_x,p2_y), [255,0,0],2)
                 
                 # moving the position of the left box based on what was found
-                if box_left_hist.max() >= 0.5*abs(to_y-from_y):
+                if box_left_hist.max() >= 0.25*abs(to_y-from_y)*255:
                     box_left_hist_list = box_left_hist.tolist()
                     left_max_index_list = [i for i, x in enumerate(box_left_hist_list) if x==box_left_hist.max()]
-                    left_pos_delta = left_max_index_list[len(left_max_index_list)//2]+max(left_pos-x_margin,0)-left_pos
+                    left_pos_delta = left_max_index_list[len(left_max_index_list)//2]+max(left_pos-x_margin_left,0)-left_pos
                     left_pos = left_pos+left_pos_delta
+                    x_margin_left = max(int(x_margin_left/margin_multiplier),min_x_margin)
                 else:
                     left_pos = left_pos+left_pos_delta
+                    x_margin_left = min(int(x_margin_left*margin_multiplier),max_x_margin)
                 left_pos = min(left_pos,img_width)
                 left_pos = max(left_pos, 0)
                     
                 # updating the left box for searching for lane points
-                box_right = img[from_y:to_y,max(right_pos-x_margin,0):min(right_pos+x_margin,img_width)]
-                res_img[from_y:to_y,max(right_pos-x_margin,0):min(right_pos+x_margin,img_width)] = box_right
+                box_right = img[from_y:to_y,max(right_pos-x_margin_right,0):min(right_pos+x_margin_right,img_width)]
+                res_img[from_y:to_y,max(right_pos-x_margin_right,0):min(right_pos+x_margin_right,img_width)] = box_right
                 box_right_hist = box_right.sum(axis=0)
                 
                 # adding coordinates of non-zero elements to the lists
                 right_lane_yvals += (np.nonzero(box_right)[0]+from_y).tolist()
-                right_lane_xvals += (np.nonzero(box_right)[1]+max(right_pos-x_margin,0)).tolist()
+                right_lane_xvals += (np.nonzero(box_right)[1]+max(right_pos-x_margin_right,0)).tolist()
                 
                 # for visualization and debuggin purposes
                 if verbose:
-                    p1_x = max(right_pos-x_margin,0)
+                    p1_x = max(right_pos-x_margin_right,0)
                     p1_y = from_y
-                    p2_x = right_pos+x_margin
+                    p2_x = right_pos+x_margin_right
                     p2_y = to_y
                     cv2.rectangle(res_img, (p1_x,p1_y), (p2_x,p2_y), [255,0,0],2)
                 
                 # moving the position of the right box based on what was found
-                if box_right_hist.max() >= 0.5*abs(to_y-from_y):
+                if box_right_hist.max() >= 0.25*abs(to_y-from_y)*255:
                     box_right_hist_list = box_right_hist.tolist()
                     right_max_index_list = [i for i, x in enumerate(box_right_hist_list) if x==box_right_hist.max()]
-                    right_pos_delta = right_max_index_list[len(right_max_index_list)//2]+max(right_pos-x_margin,0)-right_pos
+                    right_pos_delta = right_max_index_list[len(right_max_index_list)//2]+max(right_pos-x_margin_right,0)-right_pos
                     right_pos = right_pos+right_pos_delta
+                    x_margin_right = max(int(x_margin_right/margin_multiplier),min_x_margin)
                 else:
-                    right_pos = right_pos+right_pos_delta  
+                    right_pos = right_pos+right_pos_delta 
+                    x_margin_right = min(int(x_margin_right*margin_multiplier),max_x_margin)
                 right_pos = min(right_pos,img_width)
                 right_pos = max(right_pos, 0) 
             
@@ -780,24 +792,29 @@ class ImageTransform(object):
             right_lane_xvals = np.asarray(right_lane_xvals)
             
             # calculating best fit polylines - degree=2    
-            left_fit = np.polyfit(left_lane_yvals, left_lane_xvals, 2)
-            right_fit = np.polyfit(right_lane_yvals, right_lane_xvals, 2)
+            if len(left_lane_yvals)!=0:
+                left_fit = np.polyfit(left_lane_yvals, left_lane_xvals, 2)
+                left_fit_cr = np.polyfit(left_lane_yvals*self._ym_per_pix, left_lane_xvals*self._xm_per_pix, 2)
+            else:
+                left_fit = np.array([0,0,0], dtype='float')
+                left_fit_cr = np.array([0,0,0], dtype='float')
+            if len(right_lane_yvals)!=0:
+                right_fit = np.polyfit(right_lane_yvals, right_lane_xvals, 2)
+                right_fit_cr = np.polyfit(right_lane_yvals*self._ym_per_pix, right_lane_xvals*self._xm_per_pix, 2)
+            else:
+                right_fit = np.array([0,0,0], dtype='float')
+                right_fit_cr = np.array([0,0,0], dtype='float')
             
             # calculating the fitted line X values for all y values in the image
             y_points = np.asarray(range(img_height), dtype=np.float32)
             left_fit_x = left_fit[0]*y_points**2 + left_fit[1]*y_points + left_fit[2]
             right_fit_x = right_fit[0]*y_points**2 + right_fit[1]*y_points + right_fit[2]    
             
-            # Define conversions in x and y from pixels space to meters
-            ym_per_pix = 30/720 # meters per pixel in y dimension
-            xm_per_pix = 3.7/700 # meteres per pixel in x dimension
-        
             # Calculate curvature radii for left and right lane and the average thereof
             y_eval = img_height
-            left_fit_cr = np.polyfit(left_lane_yvals*ym_per_pix, left_lane_xvals*xm_per_pix, 2)
-            right_fit_cr = np.polyfit(right_lane_yvals*ym_per_pix, right_lane_xvals*xm_per_pix, 2)
             left_curverad = ((1 + (2*left_fit_cr[0]*y_eval + left_fit_cr[1])**2)**1.5) \
-                                         /np.absolute(2*left_fit_cr[0])
+                                     /np.absolute(2*left_fit_cr[0])
+            
             right_curverad = ((1 + (2*right_fit_cr[0]*y_eval + right_fit_cr[1])**2)**1.5) \
                                             /np.absolute(2*right_fit_cr[0])   
             
@@ -808,9 +825,9 @@ class ImageTransform(object):
             off_center = np.mean((left_lane_pos, right_lane_pos))
             
             # converting ot m            
-            left_lane_pos *= xm_per_pix
-            right_lane_pos *= xm_per_pix
-            off_center *= xm_per_pix
+            left_lane_pos *= self._xm_per_pix
+            right_lane_pos *= self._xm_per_pix
+            off_center *= self._xm_per_pix
             
             # Recast the x and y points into usable format for cv2.fillPoly()
             pts_left = np.array([np.transpose(np.vstack([left_fit_x,y_points]))])
@@ -827,14 +844,14 @@ class ImageTransform(object):
             results[0]['yvals'] = left_lane_yvals
             results[0]['xvals'] = left_lane_xvals
             results[0]['poly_fit'] = left_fit
-            results[0]['fitted_xvals'] = (center_position-left_fit_x)*xm_per_pix
+            results[0]['fitted_xvals'] = (center_position-left_fit_x)*self._xm_per_pix
             results[0]['curve_rad'] = left_curverad
             results[0]['base_pos'] = left_lane_pos
             # right lane
             results[1]['yvals'] = right_lane_yvals
             results[1]['xvals'] = right_lane_xvals
             results[1]['poly_fit'] = right_fit
-            results[1]['fitted_xvals'] = (center_position-right_fit_x)*xm_per_pix
+            results[1]['fitted_xvals'] = (center_position-right_fit_x)*self._xm_per_pix
             results[1]['curve_rad'] = right_curverad
             results[1]['base_pos'] = right_lane_pos
             # appending the results

@@ -113,11 +113,11 @@ class LaneLine(object):
         # check to see that lanes are roughply parallel to the previous find
         ratio2 = 0
         if self._base_pos_average is not None:
-            ratio2 = max(result['base_pos'],self.get_best_pos()) / min(result['base_pos'],self.get_best_pos())
-            self._detected = self._detected and (ratio2.max()<=1.4)
+            ratio2 = max(result['base_pos'],self.get_best_pos()) - min(result['base_pos'],self.get_best_pos())
+            self._detected = self._detected and (ratio2.max()<=2.5)
         self._ratio2_list.append(ratio1)
         
-        #self._detected = detected
+        self._detected = detected
             
         # add the results to the object if good quality is established
         if self._detected:

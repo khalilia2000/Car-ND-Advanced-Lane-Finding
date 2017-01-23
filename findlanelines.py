@@ -15,6 +15,7 @@ from imagetransform import ImageTransform
 from lanelines import LaneLine
 
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # define global variables
 left_lane = LaneLine()
@@ -28,11 +29,13 @@ if from_computer_1:
     cal_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/camera_cal/"
     tst_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/test_images/"
     work_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/"
+    log_dir = "C:/Udacity Courses/Car-ND-Udacity/P4-Advanced-Lane-Lines/log/"
 else:
     # when working from computer 2
     cal_dir = "C:/Users/ali.khalili/Desktop/Car-ND/CarND-P4-Advanced-Lane-Lines/camera_cal/"
     tst_dir = "C:/Users/ali.khalili/Desktop/Car-ND/CarND-P4-Advanced-Lane-Lines/test_images/"
     work_dir = "C:/Users/ali.khalili/Desktop/Car-ND/CarND-P4-Advanced-Lane-Lines/"
+    log_dir = "C:/Users/ali.khalili/Desktop/Car-ND/CarND-P4-Advanced-Lane-Lines/log/"
 
 
 def calibrate_camera_from_path(cal_path, nx, ny, save_with_corners=False, save_undistort=False):
@@ -111,30 +114,57 @@ def load_test_images():
     return images
 
 
+frame_counter = -1
+log_df = pd.DataFrame(columns=['left_pos','1/left_crv','left_fit_0','left_fit_1','left_fit_2',
+                               'right_pos','1/right_crv','right_fit_0','right_fit_1','right_fit_2',
+                               'detected'])
 
 def replace_frame(frame_img):
     
     global left_lane
     global right_lane
     global cam_matrix
-    global dist_matrix        
+    global dist_matrix
+        
+    global log_df
+    global frame_counter
+    
+    frame_counter += 1
     
     img_trans_obj = ImageTransform(np.asarray([frame_img]), "", cam_matrix, dist_matrix, colorspec='RGB')
     img_trans_obj.process_images()
     img_trans_obj.to_birds_eye(original=True, processed=True)
-    result = img_trans_obj.detect_lanes(verbose=False)
+    result = img_trans_obj.detect_lanes(prev_left_pos=left_lane.get_best_pos(), 
+                                        prev_right_pos=right_lane.get_best_pos(), verbose=False)
     
-    # automatic check to see if lane lines are in fact detected:
-    curve_ratio = max(result[0][0]['curve_rad'],result[0][1]['curve_rad']) / min(result[0][0]['curve_rad'],result[0][1]['curve_rad'])
-    detected = (curve_ratio<=3.5)    
     
-    # check to see that lanes are separated by the right amount of distance
-    dist = result[0][0]['fitted_xvals']-result[0][1]['fitted_xvals']
-    detected = detected and (dist.max()<=4.5) and (dist.min()>=1.1)
+    cv2.imwrite(log_dir+'pre_'+str(frame_counter)+'.png',cv2.cvtColor(frame_img,cv2.COLOR_RGB2BGR))    
+    
+    # automaticallu check to see if lane lines are in fact detected:
+    # check to see if lanes are separated by correct distance - between 3.3 and 4.1 m
+    detected = abs(abs(result[0][0]['base_pos']-result[0][1]['base_pos'])-3.7)<=0.4
+    # check to see if curvatures are similar between right and left lanes - Delta(1/curve_rad) <= 0.0005
+    detected = detected and (abs(1/result[0][0]['curve_rad']-1/result[0][1]['curve_rad'])<=0.0005)
+    # check to see if the lanes are approximately parallel i.e. A and B similar    
+    detected = detected and (abs(result[0][0]['poly_fit'][0]-result[0][1]['poly_fit'][0])<=0.00075)
+    detected = detected and (abs(result[0][0]['poly_fit'][1]-result[0][1]['poly_fit'][1])<=0.5)  
+    
+    log_df.loc[len(log_df)] = [result[0][0]['base_pos'],
+                               1/result[0][0]['curve_rad'],
+                               result[0][0]['poly_fit'][0], 
+                               result[0][0]['poly_fit'][1], 
+                               result[0][0]['poly_fit'][2],
+                               result[0][1]['base_pos'],
+                               1/result[0][1]['curve_rad'],
+                               result[0][1]['poly_fit'][0], 
+                               result[0][1]['poly_fit'][1], 
+                               result[0][1]['poly_fit'][2],detected]
+    
     
     # initialize left and right lane line objects
     left_lane.add_results(result[0][0], detected)
     right_lane.add_results(result[0][1], detected)
+    
     
     poly_fit_list = [left_lane.get_best_poly_fit(), right_lane.get_best_poly_fit()]
     
@@ -154,6 +184,7 @@ def replace_frame(frame_img):
         img_trans_obj.plot_fitted_poly([poly_fit_list], [label_text])
     
         # return obj._processed_images_0
+        cv2.imwrite(log_dir+'post_'+str(frame_counter)+'.png',cv2.cvtColor(img_trans_obj.processed_images[0],cv2.COLOR_RGB2BGR))    
         return img_trans_obj.processed_images[0]
     else:
         return img_trans_obj.RGB[0]
@@ -167,6 +198,14 @@ def process_movie(fname):
     movie_clip = VideoFileClip(work_dir+fname)
     processed_clip = movie_clip.fl_image(replace_frame)
     processed_clip.write_videofile(work_dir+'AK_'+fname, audio=False, verbose=True, threads=6)
+    
+    #left_list = list(map(lambda x: 0 if x>3 else x, left_lane._ratio2_list))
+    #right_list = list(map(lambda x: 0 if x>3 else x, right_lane._ratio2_list))
+    #plt.plot(left_list)    
+    #plt.plot(right_list)    
+    writer = pd.ExcelWriter(log_dir+'log_'+fname[:fname.find('.')]+'.xlsx', engine='xlsxwriter')
+    log_df.to_excel(writer,'Sheet1')
+    writer.save()
     
     return
 
@@ -184,7 +223,7 @@ def load_and_process_test_images():
     img_trans_obj.process_images()
     
     img_trans_obj.to_birds_eye(original=True, processed=True)
-    results = img_trans_obj.detect_lanes(verbose=True)
+    results = img_trans_obj.detect_lanes(prev_left_pos=1.487756618,prev_right_pos=-2.064239833,verbose=True)
 
     poly_fits = []
     labels = []    
@@ -228,8 +267,8 @@ def main():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)  
     
-    process_movie('project_video.mp4')
-    #load_and_process_test_images()
+    #process_movie('project_video.mp4')
+    load_and_process_test_images()
     
     return
     
