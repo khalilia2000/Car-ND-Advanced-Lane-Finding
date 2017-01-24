@@ -655,7 +655,8 @@ class ImageTransform(object):
             img_post_color[-1][img_post_color[-1]>blur_thresh] = 255
             img_post_color[-1][img_post_color[-1]<=blur_thresh] = 0
         img_post_color = np.asarray(img_post_color)
-               
+ 
+              
         # saving processed images to the iamge transform object
         img_result_list = []
         for img1, img2 in zip(img_post_grad, img_post_color):
@@ -663,7 +664,7 @@ class ImageTransform(object):
             img_result_list[-1][(img1>0) | (img2>0)]=255
         img_result_list = np.asarray(img_result_list)
             
-        self.processed_images = np.copy(img_result_list)
+        self._processed_images = np.copy(img_result_list)
         
         
         

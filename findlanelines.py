@@ -137,7 +137,14 @@ def replace_frame(frame_img):
     cv2.imwrite(log_dir+'undist_'+str(frame_counter)+'.png',cv2.cvtColor(img_trans_obj.RGB[0],cv2.COLOR_RGB2BGR))    
     
     img_trans_obj.process_images()
+    
+    cv2.imwrite(log_dir+'binary_'+str(frame_counter)+'.png',img_trans_obj.processed_images[0])        
+    
     img_trans_obj.to_birds_eye(original=True, processed=True)
+    
+    cv2.imwrite(log_dir+'birds_eye_orig_'+str(frame_counter)+'.png',cv2.cvtColor(img_trans_obj.birds_eye_original[0],cv2.COLOR_RGB2BGR))            
+    cv2.imwrite(log_dir+'birds_eye_proc_'+str(frame_counter)+'.png',img_trans_obj.birds_eye_processed[0])            
+    
     result = img_trans_obj.detect_lanes(prev_left_pos=left_lane.get_best_pos(), 
                                         prev_right_pos=right_lane.get_best_pos(), verbose=False)
     
@@ -274,7 +281,7 @@ def main():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)  
     
-    process_movie('challenge_video.mp4')
+    process_movie('project_video.mp4')
     #load_and_process_test_images()
     
     return
