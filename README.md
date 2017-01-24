@@ -15,16 +15,6 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-[//]: # (Image References)
-
-[image1]: ./camera_cal/calibration2.jpg "Calibration Image"
-[image2]: ./camera_cal/corners_found2.jpg "Calibration Image with Chessboard Corners Drawn"
-[image3]: ./camera_cal/undistort2.jpg "Calibration Image after Undistortion"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
-
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 ###Here the rubric points are considered individually and descriptions are provided on how I addressed each point in my implementation.  
 ---
@@ -51,13 +41,10 @@ Here is how the function works:
 
 Examples of the original image, original image with chessboard corners drawn on it, and undistorted image are shown below:  
 
-[1]: <img src="./camera_cal/calibration2.jpg" alt="Calibration Image" height =144 width=256>
-[2]: <img src="./camera_cal/corners_found2.jpg" alt="Same Image with Chessboard Corners Drawn" height =144 width=256>
-[3]: <img src="./camera_cal/undistort2.jpg" alt="Same Image after Undistortion" height =144 width=256>
+| Original Image | with Chessboard Corners Drawn | Undistorted |
+|:--------------:|:-----------------------------:|:-----------:| 
+| <img src="./camera_cal/calibration2.jpg" alt="Calibration Image" height =144 width=256> | <img src="./camera_cal/corners_found2.jpg" alt="Same Image with Chessboard Corners Drawn" height =144 width=256> | <img src="./camera_cal/undistort2.jpg" alt="Same Image after Undistortion" height =144 width=256> |
 
-| Source        | Destination   | test |
-|:-------------:|:-------------:|:----:| 
-| [1] | [2] | [3] |
 
 
 ###Pipeline (single images)
