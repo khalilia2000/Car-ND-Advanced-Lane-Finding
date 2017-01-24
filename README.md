@@ -15,8 +15,8 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
-###Here the rubric points are considered individually and descriptions are provided on how I addressed each point in my implementation.  
+## Rubric Points
+Here the [rubric](https://review.udacity.com/#!/rubrics/571/view) points are considered individually and descriptions are provided on how I addressed each point in my implementation.  
 ---
 ###Writeup / README
 
@@ -50,9 +50,11 @@ Examples of the original image, original image with chessboard corners drawn on 
 ###Pipeline (single images)
 
 ####1. Provide an example of a distortion-corrected image.
-A classe named `ImageTransform` is created for the sole purpose of manipulating images. This class (which is contained in file `imagetransform.py`) gets an array of images, an array of labels as well as camera and distorsion matrices obtianed prviously plus the colorspec of the images. This class has many methods to manipulate images. One of the methods is named `to_undistort()`, which is called when the class is created in `__init__()` method, and calls `cv2.undistort()` method to undistort the images. Gaussian blur (using `cv2.GaussianBlur()`) is also applied to the images in the `__init__()` method prior to undistorting the images. The images are also converted to RGB colorspec after undistorting in the `__init__()`. The follwoing images show a random frame that is in original format plus the same frame after blurring / undisotrting:
+A classe named `ImageTransform` is created for the sole purpose of manipulating images. This class (which is contained in file `imagetransform.py`) gets an array of images, an array of labels as well as camera and distorsion matrices obtianed prviously plus the colorspec of the images. This class has many methods to manipulate images. One of the methods is named `to_undistort()`, which is called when the class is created in `__init__()` method, and calls `cv2.undistort()` method to undistort the images. Gaussian blur (using `cv2.GaussianBlur()`) is also applied to the images in the `__init__()` method prior to undistorting the images. The images are also converted to RGB colorspec after undistorting in the `__init__()`. The follwoing images show a random frame that is in the original format plus the same frame after blurring / undisotrting:
 
-
+| Original Frame | Blurred and Undistorted | 
+|:--------------:|:-----------------------:|  
+| <img src="./output_images/pre_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/undist_531.png" alt="Same Image after Undistortion" height =288 width=512> |
 
 
 ####2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
