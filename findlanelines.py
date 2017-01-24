@@ -281,8 +281,8 @@ def main():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)  
     
-    process_movie('project_video.mp4')
-    #load_and_process_test_images()
+    #process_movie('project_video.mp4')
+    load_and_process_test_images()
     
     return
     
