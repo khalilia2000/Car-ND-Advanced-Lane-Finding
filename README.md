@@ -89,31 +89,29 @@ Example of binary images created from a random frame is shown below:
   
 ####3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+The `ImageTransform` class contains a method named `to_birds_eye()` (lines 197 to 227 of `imagetransform.py`), which uses `cv2.getPerspectiveTransform()` function to calculate the transfromation matrix and then uses `cv2.warpPerspective()` furnction to transform the images to a birds eye view. `to_birds_eye()` method has two kwargs (i.e. `original` and `processed`), based on which the perspective transformation would be performed on original images, and/or the processed binary images that are already exist in the object. The source and destination points for the transformation are initialized in `__init__()` method of the class (lines 47 to 55 of `imagetransform.py`:
 
 ```
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
+self._p_0 = np.float32([[0.10,1.0]])
+self._p_1 = np.float32([[0.43,0.65]])
+self._p_2 = np.float32([[0.57,0.65]])
+self._p_3 = np.float32([[0.90,1.0]])
 
+self._q_0 = np.float32([[0.20,1.0]])
+self._q_1 = np.float32([[0.20,0.3]])
+self._q_2 = np.float32([[0.80,0.3]])
+self._q_3 = np.float32([[0.80,1.0]])
 ```
-This resulted in the following source and destination points:
+The values are in fraction of the image size in each direction and are multiplied by the image width/height respectively in `to_birds_eye()`method before the transformation is applied. This allows images of any arbitrary size to be processed without any errors.  
 
-| Source        | Destination   | 
-|:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+Example of birds eye perspective transformation of the original and binary images are shown below:  
 
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+| Description | Original Frame | Processed Binary Image | 
+|:------------|:--------------:|:----------------------:|  
+| Before Perspective Transformation | <img src="./output_images/pre_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/binary_531.png" alt="Same Image after Undistortion" height =288 width=512> |
+| After Perspective Transformation | <img src="./output_images/birds_eye_orig_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/birds_eye_proc_531.png" alt="Same Image after Undistortion" height =288 width=512> |
+  
+As noted from above example photos, the perspective transform works properly as the lines appear parallel in the warped image.
 
 
 
