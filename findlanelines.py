@@ -134,7 +134,7 @@ def replace_frame(frame_img):
     
     img_trans_obj = ImageTransform(np.asarray([frame_img]), "", cam_matrix, dist_matrix, colorspec='RGB')
     
-    cv2.imwrite(log_dir+'undist_'+str(frame_counter)+'.png',img_trans_obj.RGB[0])    
+    cv2.imwrite(log_dir+'undist_'+str(frame_counter)+'.png',cv2.cvtColor(img_trans_obj.RGB[0],cv2.COLOR_RGB2BGR))    
     
     img_trans_obj.process_images()
     img_trans_obj.to_birds_eye(original=True, processed=True)
@@ -149,7 +149,7 @@ def replace_frame(frame_img):
     # check to see if curvatures are similar between right and left lanes - Delta(1/curve_rad) <= 0.0006
     detected = detected and (abs(1/result[0][0]['curve_rad']-1/result[0][1]['curve_rad'])<=0.0006)
     # check to see if the lanes are approximately parallel i.e. A and B similar    
-    detected = detected and (abs(result[0][0]['poly_fit'][0]-result[0][1]['poly_fit'][0])<=0.0006)
+    detected = detected and (abs(result[0][0]['poly_fit'][0]-result[0][1]['poly_fit'][0])<=0.0008)
     detected = detected and (abs(result[0][0]['poly_fit'][1]-result[0][1]['poly_fit'][1])<=0.5)  
     # check to see if a poly fit is returned
     detected = detected and (result[0][0]['poly_fit'][0]!=0 or result[0][0]['poly_fit'][1]!=0 or result[0][0]['poly_fit'][2]!=0)
@@ -274,7 +274,7 @@ def main():
     # calibrate camera
     cam_matrix, dist_matrix = calibrate_camera_from_path(cal_dir, 9, 6)  
     
-    process_movie('project_video.mp4')
+    process_movie('challenge_video.mp4')
     #load_and_process_test_images()
     
     return

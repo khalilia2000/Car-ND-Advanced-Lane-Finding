@@ -104,7 +104,7 @@ class LaneLine(object):
             
             # check to see that poly_fit_0 and poly_fit_1 are not far apart from previous detection
             if self.get_best_poly_fit() is not None:
-                self._detected = self._detected and abs(result['poly_fit'][0]-self.get_best_poly_fit()[0])<=0.0006
+                self._detected = self._detected and abs(result['poly_fit'][0]-self.get_best_poly_fit()[0])<=0.0008
                 self._detected = self._detected and abs(result['poly_fit'][1]-self.get_best_poly_fit()[1])<=0.5
         else:
             self._detected = False
