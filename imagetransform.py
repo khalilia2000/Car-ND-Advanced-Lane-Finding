@@ -240,7 +240,7 @@ class ImageTransform(object):
         Undistorts the images based on the camera and distortion matrices
         '''
         #
-        self._undistorted = np.asarray([cv2.undistort(img, self._mtx, self._dist, None, self._mtx) for img in self._original_images])
+        self._undistorted = np.asarray([cv2.undistort(img, self._mtx, self._dist, None, self._mtx) for img in self._blurred])
      
    
    

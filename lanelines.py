@@ -13,9 +13,8 @@ class LaneLine(object):
     
     def __init__(self):
         
-        
         # variables keepting track of lane detection        
-        self._detected = True               # was the line detected in the last iteration?
+        self._detected = False              # was the line detected in the last iteration?
         self._num_undetected = 0            # number of consecutive undetected iterations
         self._num_delta_iters = None        # number of the iterations between the last two successful detections
         
@@ -92,8 +91,9 @@ class LaneLine(object):
     def add_results(self, result, detected):
         
         # check that the result makes sense
-        self._detected = detected
+        
         if detected is not None:
+            self._detected = detected
             # check the position of the lane from the previous best location
             if self.get_best_pos() is not None:
                 self._detected = self._detected and abs(result['base_pos']-self.get_best_pos())<=0.5
@@ -106,7 +106,8 @@ class LaneLine(object):
             if self.get_best_poly_fit() is not None:
                 self._detected = self._detected and abs(result['poly_fit'][0]-self.get_best_poly_fit()[0])<=0.0006
                 self._detected = self._detected and abs(result['poly_fit'][1]-self.get_best_poly_fit()[1])<=0.5
-        
+        else:
+            self._detected = False
             
         # add the results to the object if good quality is established
         if self._detected:
@@ -157,8 +158,8 @@ class LaneLine(object):
             
             self._num_undetected += 1
             # if number of undetected iterations reaches an upper limit, resets the data
-            if self._num_undetected > self._num_iter:
-                self.__init__
+            if self._num_undetected > 2*self._num_iter:
+                self.__init__()
     
 
     def get_best_pos(self):        
