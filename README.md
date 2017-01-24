@@ -15,8 +15,10 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-## Rubric Points
+## Rubric Points  
+
 Here the [rubric](https://review.udacity.com/#!/rubrics/571/view) points are considered individually and descriptions are provided on how I addressed each point in my implementation.  
+
 ---
 ###Writeup / README
 
@@ -77,7 +79,9 @@ A combination of color and gradient thresholds were used to generate a binary im
   
 Example of binary images created from a random frame is shown below:
 
-
+| Original Frame | Processed Binary Image | 
+|:--------------:|:----------------------:|  
+| <img src="./output_images/pre_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/binary_531.png" alt="Same Image after Undistortion" height =288 width=512> |
 
 
 ####3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
