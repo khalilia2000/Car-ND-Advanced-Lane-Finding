@@ -135,6 +135,7 @@ The `ImageTransform` class contains a method named `detect_lanes()` (lines 671 t
 
 The following image shows the steps taken in `detect_lanes()` method (i.e. the output of the verbose mode):
 
+<img src="./output_images/detect_lanes_531.png" alt="Process Showing Lane Detection and Window Search" height =1205 width=2400>
 
 
 ####5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
