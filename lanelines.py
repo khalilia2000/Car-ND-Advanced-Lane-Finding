@@ -96,11 +96,11 @@ class LaneLine(object):
             self._detected = detected
             # check the position of the lane from the previous best location
             if self.get_best_pos() is not None:
-                self._detected = self._detected and abs(result['base_pos']-self.get_best_pos())<=0.5
+                self._detected = self._detected and abs(result['base_pos']-self.get_best_pos())<=0.4
             
             # check to see that curvature is not far apart from previous curvatures
             if self.get_best_curve_rad() is not None:
-                self._detected = self._detected and abs(1/result['curve_rad']-1/self.get_best_curve_rad())<=0.0006
+                self._detected = self._detected and abs(1/result['curve_rad']-1/self.get_best_curve_rad())<=0.0025
             
             # check to see that poly_fit_0 and poly_fit_1 are not far apart from previous detection
             if self.get_best_poly_fit() is not None:
