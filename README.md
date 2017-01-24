@@ -1,4 +1,4 @@
-# Car-ND-Advanced-Lane-Finding
+### Car-ND-Advanced-Lane-Finding
 
 ---
 
@@ -27,6 +27,9 @@ Here the [rubric](https://review.udacity.com/#!/rubrics/571/view) points are con
 ####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.   
 
 I did use the template provided in the course notes and modified it. You're reading the README.md!
+  
+  
+
 ###Camera Calibration
 
 ####1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
@@ -117,17 +120,53 @@ As noted from above example photos, the perspective transform works properly as 
 
 ####4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+The `ImageTransform` class contains a method named `detect_lanes()` (lines 671 to 874 of `imagetransform.py`), which identifies the lane pixels and fit their position with a polynomial. The previous base position of the left and right lanes can be provided as arguments to this method (i.e. `prev_left_pos` and `prev_right_pos`). A `verbose` argument can also provided to the method, which if True will plot the results during the operation. The following is performed in the method:  
+- If `prev_left_pos` and `prev_right_pos` arguments are None, then a blind search is performed, but calculating the histogram in the bottom half of the picture and searching for the maximum points of that histogram in the right and left portion of that histogram (lines 703 to 721 of `imagetransform.py`).  
+- Once an initial position is established for both left and right lanes, a narrower window search will be performed iteratively from bottom of the picture upwards (lines 724 to 787 of `imagetransform.py`). Variable `num_horizontal_bands` determines the number of window searches that would be performed covering the full height of the image (initially set to 10 here). The height of the search window in each iteration is constant and is calculated based on the `num_horizontal_bands`.  
+- In each iteration, the search window is centered on the anticipated location of the lane, which is determined from the previous search (i.e. the position of the search window changes dynamically). The width of the search window is dynamically changed depending on the confidence level and previous finding results. Variables `min_x_margin`, `max_x_margin` and `margin_ultiplier` control the width of the search window in each step based on the following rules:  
+  - If the confidence level was low in previous search attempt, then the width is multiplied by margin_ultiplier, otherwise it would be devided by the margin_ultiplier to focus the search on the lane only  
+  - The width of the search window is capped to be between 2 x min_x_margin and 2 x max_x_margin  
+- All points in the search windows are considered valid lane lines and all other piexels are discarded.  
+- `np.polyfit()` function is then used (lines 795 to 807 of `imagetransform.py`) to calculate the best polyfit parameters of order 2. The poly fit parameters were obtained using both pixel coordinates and real coordinates. Real coordinates are obtained by multiplying the pixel coordinates (from a birds eye picture) to conversion factors `_xm_per_pix` and `_ym_per_pix`, which are set in the `__init__()` method of the class.  
+- Once polyfit parameters are obtained, the fitted xvalues of the lane lines are calcualted for plotting purposes (lines 809 to 812 of `imagetransform.py`).  
+- Curvature radii and base position of the lane lines were then calculated (lines 822 to 836 of `imagetransform.py`) using formulas that were discussed in the course notes.  
+- `cv2.fillPoly()` function was used then to create a solid fill image for verbose mode.
+- The results are returned in a dictionary for each of the left and right lanes.  
+
+The following image shows the steps taken in `detect_lanes()` method (i.e. the output of the verbose mode):
 
 
 
 ####5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+As noted in the answer to the previous question, this is done in method `detect_lanes()` contained in the `ImageTransform` class (lines 822 to 836 of `imagetransform.py`). The following is the code used for this calculation:
+
+```
+# Calculate curvature radii for left and right lane and the average thereof
+y_eval = img_height
+left_curverad = ((1 + (2*left_fit_cr[0]*y_eval + left_fit_cr[1])**2)**1.5) \
+                         /np.absolute(2*left_fit_cr[0])
+
+right_curverad = ((1 + (2*right_fit_cr[0]*y_eval + right_fit_cr[1])**2)**1.5) \
+                                /np.absolute(2*right_fit_cr[0])   
+
+# Calculate off-center location of the car assuming the centre of the image is the centre of teh car
+center_position = img_width//2
+left_lane_pos = center_position - left_fit_x[-1]
+right_lane_pos = center_position - right_fit_x[-1]
+off_center = np.mean((left_lane_pos, right_lane_pos))
+
+# converting ot m            
+left_lane_pos *= self._xm_per_pix
+right_lane_pos *= self._xm_per_pix
+off_center *= self._xm_per_pix
+```
+
+y_eval is initially set to `img_height*self._ym_per_pix` in order to calculate the results at the bottom of the image, where the car is located. note that the polyfit parameters `left_fit_cr` and `right_fit_cr` are already based on real coordinates. The position of the lanes are converted to the real coordinates by multiplying by the conversion factors.
 
 ####6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+Method `plot_fitted_poly()` in class `ImageTransform` performs the task of plotting the resutls on the original image. It takes arguments `fitted_poly_list`, which is the polyfit parameters for left and right lanes and `labels`, which is the optional text that will be printed on the image. Below is an example output of the function, which is plotted side by side on the original frame:
 
 
 
