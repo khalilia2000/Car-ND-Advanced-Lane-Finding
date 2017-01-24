@@ -135,8 +135,9 @@ The `ImageTransform` class contains a method named `detect_lanes()` (lines 671 t
 
 The following image shows the steps taken in `detect_lanes()` method (i.e. the output of the verbose mode):
 
-<img src="./output_images/detect_lanes_531.png" alt="Process Showing Lane Detection and Window Search" width=300>
+<img src="./output_images/detect_lanes_531.png" alt="Process Showing Lane Detection and Window Search" width=1500>
 
+The left image is the processed binary image, the middle image shows the window search process from bottom of the image upwards, and the right image above shows the result of the lane finding after `cv2.fillPoly()` function is used to hatch between the fitted lane lines.
 
 ####5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
@@ -167,11 +168,12 @@ y_eval is initially set to `img_height*self._ym_per_pix` in order to calculate t
 
 ####6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-Method `plot_fitted_poly()` in class `ImageTransform` performs the task of plotting the resutls on the original image. It takes arguments `fitted_poly_list`, which is the polyfit parameters for left and right lanes and `labels`, which is the optional text that will be printed on the image. Below is an example output of the function, which is plotted side by side on the original frame:
+Method `plot_fitted_poly()` in class `ImageTransform` performs the task of plotting the resutls on the original image. It takes arguments `fitted_poly_list`, which is the polyfit parameters for left and right lanes and `labels`, which is the optional text that will be printed on the image. Below is an example output of the function, which is plotted side by side with the original frame:
 
+| Original Frame | Final Processed Image | 
+|:--------------:|:---------------------:|  
+| <img src="./output_images/pre_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/post_531.png" alt="Final Result" height =288 width=512> |
 
-
----
 
 ###Pipeline (video)
 
