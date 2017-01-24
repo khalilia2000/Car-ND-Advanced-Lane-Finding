@@ -20,8 +20,10 @@ The goals / steps of this project are the following:
 Here the [rubric](https://review.udacity.com/#!/rubrics/571/view) points are considered individually and descriptions are provided on how I addressed each point in my implementation:  
   
   
+    
 ###Writeup / README
-
+  
+  
 ####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.   
 
 I did use the template provided in the course notes and modified it. You're reading the README.md!
@@ -47,8 +49,10 @@ Examples of the original image, original image with chessboard corners drawn on 
 | <img src="./camera_cal/calibration2.jpg" alt="Calibration Image" height =144 width=256> | <img src="./camera_cal/corners_found2.jpg" alt="Same Image with Chessboard Corners Drawn" height =144 width=256> | <img src="./camera_cal/undistort2.jpg" alt="Same Image after Undistortion" height =144 width=256> |
   
   
+  
 ###Pipeline (single images)
-
+  
+  
 ####1. Provide an example of a distortion-corrected image.
 A classe named `ImageTransform` is created for the sole purpose of manipulating images. This class (which is contained in file `imagetransform.py`) gets an array of images, an array of labels as well as camera and distorsion matrices obtianed prviously plus the colorspec of the images. This class has many methods to manipulate images. One of the methods is named `to_undistort()` (from line 238 to 243), which is called when the class is created in `__init__()` method, and calls `cv2.undistort()` method to undistort the images. Gaussian blur (using `cv2.GaussianBlur()`) is also applied to the images in the `__init__()` method prior to undistorting the images. The images are also converted to RGB colorspec after undistorting in the `__init__()`. The follwoing images show a random frame that is in the original format plus the same frame after blurring / undisotrting:
 
