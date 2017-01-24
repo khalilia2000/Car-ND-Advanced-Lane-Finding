@@ -145,7 +145,7 @@ As noted in the answer to the previous question, this is done in method `detect_
 
 ```
 # Calculate curvature radii for left and right lane and the average thereof
-y_eval = img_height
+y_eval = img_height*self._ym_per_pix
 left_curverad = ((1 + (2*left_fit_cr[0]*y_eval + left_fit_cr[1])**2)**1.5) \
                          /np.absolute(2*left_fit_cr[0])
 
@@ -179,7 +179,7 @@ Method `plot_fitted_poly()` in class `ImageTransform` performs the task of plott
 
 ####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./AK_project_video.mp4)
 
 ---
 
@@ -187,4 +187,15 @@ Here's a [link to my video result](./project_video.mp4)
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+The following challenges were encoutered and resolved during the implementation of this project:  
+- Automatically evaluating the lane lines and determining if they make sense was challenging. For that I had to check the difference between the positions of the left and right lanes, difference in 1/curve_rad of the right and left lanes, and the difference between the fitploy parameters of left and right lanes. However, not knowing how those values changed during the video was challenging. I ended up saving a log file during the video porcessing, which saved all interesting parameters pertaining to the left and right lanes. Based on that data I decided what good decision bounds are for identifying whether lanes are identified correctly.  
+- I defined a class named `LaneLine()` in file `lanelines.py`, which keeps track of the position of the lanes duirng a video stream. Each time a result is passed on to the object, it evaluates the lane lines compared to the position and curvature of the previous iterations and decides if the lane is correctly detected. If not detected, the anticipated location of the lane based on the results  of the previous n frames is returned when needed. If correctly detected, then the result would be added to the list.  
+- To make the code more robust I elected to have class `ImageTransform` get an array of images as input instead of just a single image. This helps if multiple cameras are installed on the car. Also all operations are independent of the size of the images that are passed on.  
+
+The following are likely conditions that may result in failure of the pipeline:
+- The thresholding works for the project video, but is sensitive to the colors / gradients. Therefore in poor weather conditions, of if reflections off the front glass are severe the pipeline may fail.  
+- Shadows close to the lanes (i.e. due to barriers, etc.) may pose challenges to identifying lanes.  
+
+What could be done to make the pipeline more robust:
+- Combining Hough transform that was used in project 1 with the color and gradient thresholding may result in a more robust pipeline.
+- Masking the region of interest may also result in more robust implementation and avoiding false lane detections too far away from the lanes.
