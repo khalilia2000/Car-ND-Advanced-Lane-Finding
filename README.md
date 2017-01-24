@@ -17,9 +17,9 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/undistort_output.png "Undistorted"
-[image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
+[image1]: ./camera_cal/calibration2.jpg "Calibration Image"
+[image2]: ./camera_cal/corners_found2.jpg "Calibration Image with Chessboard Corners Drawn"
+[image3]: ./camera_cal/undistort2.jpg "Calibration Image after Undistortion"
 [image4]: ./examples/warped_straight_lines.jpg "Warp Example"
 [image5]: ./examples/color_fit_lines.jpg "Fit Visual"
 [image6]: ./examples/example_output.jpg "Output"
@@ -51,9 +51,13 @@ Here is how the function works:
 
 Examples of the original image, original image with chessboard corners drawn on it, and undistorted image are shown below:  
 
-![alt text][image1]
-![alt text][image2]
-![alt text][image3]
+[1]: <img src="./camera_cal/calibration2.jpg" alt="Calibration Image" height =144 width=256>
+[2]: <img src="./camera_cal/corners_found2.jpg" alt="Same Image with Chessboard Corners Drawn" height =144 width=256>
+[3]: <img src="./camera_cal/undistort2.jpg" alt="Same Image after Undistortion" height =144 width=256>
+
+| Source        | Destination   | test |
+|:-------------:|:-------------:|:----:| 
+| [1] | [2] | [3] |
 
 
 ###Pipeline (single images)
