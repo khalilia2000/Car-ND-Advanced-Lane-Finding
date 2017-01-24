@@ -15,11 +15,11 @@ The goals / steps of this project are the following:
 * Warp the detected lane boundaries back onto the original image.
 * Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-## Rubric Points  
-
-Here the [rubric](https://review.udacity.com/#!/rubrics/571/view) points are considered individually and descriptions are provided on how I addressed each point in my implementation.  
-
 ---
+
+Here the [rubric](https://review.udacity.com/#!/rubrics/571/view) points are considered individually and descriptions are provided on how I addressed each point in my implementation:  
+  
+  
 ###Writeup / README
 
 ####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.   
@@ -45,9 +45,8 @@ Examples of the original image, original image with chessboard corners drawn on 
 | Original Image | with Chessboard Corners Drawn | Undistorted |
 |:--------------:|:-----------------------------:|:-----------:| 
 | <img src="./camera_cal/calibration2.jpg" alt="Calibration Image" height =144 width=256> | <img src="./camera_cal/corners_found2.jpg" alt="Same Image with Chessboard Corners Drawn" height =144 width=256> | <img src="./camera_cal/undistort2.jpg" alt="Same Image after Undistortion" height =144 width=256> |
-
-
-
+  
+  
 ###Pipeline (single images)
 
 ####1. Provide an example of a distortion-corrected image.
@@ -56,8 +55,8 @@ A classe named `ImageTransform` is created for the sole purpose of manipulating 
 | Original Frame | Blurred and Undistorted | 
 |:--------------:|:-----------------------:|  
 | <img src="./output_images/pre_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/undist_531.png" alt="Same Image after Undistortion" height =288 width=512> |
-
-
+  
+  
 ####2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 A combination of color and gradient thresholds were used to generate a binary image. Thresholding occurs in method `process_images()` in class `ImageTransform`, which is contained in file `imagetransform.py` (from line 588 to line 667). The following steps were followed:  
 - the thresholding was done based on gradient only. Various additional methods such as the following were defined and used to perform thresholding:  
@@ -82,8 +81,8 @@ Example of binary images created from a random frame is shown below:
 | Original Frame | Processed Binary Image | 
 |:--------------:|:----------------------:|  
 | <img src="./output_images/pre_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/binary_531.png" alt="Same Image after Undistortion" height =288 width=512> |
-
-
+  
+  
 ####3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
 The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
