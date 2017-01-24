@@ -27,17 +27,16 @@ I did use the template provided in the course notes and modified it. You're read
 
 ####1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-The code for this step is contained in the function calibrate_camera_from_path (lines #41 through #100 of the file named `findlanelines.py`).  
-
-This function gets a path as input along with number of chess board corners in x and y directions and returns the camera and distortion matrices. It also has additionl kwargs (i.e. dave_with_corners and save_undistort), that can be used to save the transformed images.
-Here is how the function works:  
-1- "opbject points" are prepared, which will be the (x, y, z) coordinates of the chessboard corners in the world.Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image. Thus, `objp` is just a replicated array of coordinates. `objpoints` and `imgpoints` are the initialized as empty lists: `objpoints` will be appended with a copy of `objp` every time the program successfully detects all chessboard corners in a test image. `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection;  
-2- program uses the glob library to read all files fitting `calibration*.jpg` naming conventions;  
-3- for each image that is read, `cv2.findChessboardCorners()` is called to find the chessboard corners;  
-4- if save_with_corners kwarg is True, then file is saved with chessboard corners drawn on it;  
-5- function `cv2.calibrateCamera()` is then called with 'objpoints' and 'imgpoints' and the camera and distortion matrices are calcualted;  
-6- if save_undistort kwarg is True, then file is undistorted using `cv2.undistort()` function and then saved;  
-7- the function returns the camera matrix and distortion matrix at the end.  
+The code for this step is contained in the function `calibrate_camera_from_path()` (lines #41 through #100 of the file named `findlanelines.py`).  
+This function gets a path as input along with number of chess board corners in x and y directions and returns the camera and distortion matrices. It also has additionl kwargs (i.e. dave_with_corners and save_undistort), that can be used to save the transformed images.  
+The following steps were followed in the `calibrate_camera_from_path()` function:  
+- Opbject points are prepared, which will be the (x, y, z) coordinates of the chessboard corners in the world.Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image. Thus, `objp` is just a replicated array of coordinates. `objpoints` and `imgpoints` are the initialized as empty lists: `objpoints` will be appended with a copy of `objp` every time the program successfully detects all chessboard corners in a test image. `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection;  
+- Program uses the glob library to read all files fitting `calibration*.jpg` naming conventions;  
+- For each image that is read, `cv2.findChessboardCorners()` is called to find the chessboard corners;  
+- If save_with_corners kwarg is True, then file is saved with chessboard corners drawn on it;  
+- Function `cv2.calibrateCamera()` is then called with 'objpoints' and 'imgpoints' and the camera and distortion matrices are calcualted;  
+- If save_undistort kwarg is True, then file is undistorted using `cv2.undistort()` function and then saved;  
+- The function returns the camera matrix and distortion matrix at the end.  
 
 Examples of the original image, original image with chessboard corners drawn on it, and undistorted images are shown below:  
 
@@ -50,7 +49,7 @@ Examples of the original image, original image with chessboard corners drawn on 
 ###Pipeline (single images)
 
 ####1. Provide an example of a distortion-corrected image.
-A classe named `ImageTransform` is created for the sole purpose of manipulating images. This class (which is contained in file `imagetransform.py`) gets an array of images, an array of labels as well as camera and distorsion matrices obtianed prviously plus the colorspec of the images. This class has many methods to manipulate images. One of the methods is named `to_undistort()`, which is called when the class is created in `__init__()` method, and calls `cv2.undistort()` method to undistort the images. Gaussian blur (using `cv2.GaussianBlur()`) is also applied to the images in the `__init__()` method prior to undistorting the images. The images are also converted to RGB colorspec after undistorting in the `__init__()`. The follwoing images show a random frame that is in the original format plus the same frame after blurring / undisotrting:
+A classe named `ImageTransform` is created for the sole purpose of manipulating images. This class (which is contained in file `imagetransform.py`) gets an array of images, an array of labels as well as camera and distorsion matrices obtianed prviously plus the colorspec of the images. This class has many methods to manipulate images. One of the methods is named `to_undistort()` (from line 238 to 243), which is called when the class is created in `__init__()` method, and calls `cv2.undistort()` method to undistort the images. Gaussian blur (using `cv2.GaussianBlur()`) is also applied to the images in the `__init__()` method prior to undistorting the images. The images are also converted to RGB colorspec after undistorting in the `__init__()`. The follwoing images show a random frame that is in the original format plus the same frame after blurring / undisotrting:
 
 | Original Frame | Blurred and Undistorted | 
 |:--------------:|:-----------------------:|  
@@ -58,7 +57,26 @@ A classe named `ImageTransform` is created for the sole purpose of manipulating 
 
 
 ####2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+A combination of color and gradient thresholds were used to generate a binary image. Thresholding occurs in method `process_images()` in class `ImageTransform`, which is contained in file `imagetransform.py` (from line 588 to line 667). The following steps were followed:  
+- the thresholding was done based on gradient only. Various additional methods such as the following were defined and used to perform thresholding:  
+  - `get_canny()`: from line 294 to line 303 of `imagetransform.py` was used to obtain Canny transformation.
+  - `get_angle_sobel_thresh()`: from line 360 to 385 of `imagetransform.py` was used to peform thresholding based on the gradient angles using `cv2.Sobel()` method.
+  - `get_mag_sobel_thresh()`: from line 335 to 356 of `imagetransform.py` was used to peform thresholding based on the magnitude of the gradients.
+  - `get_dir_sobel_thresh()`: from line 308 to 331 of `imagetransform.py` was used to peform thresholding based on the directional gradient values using `cv2.Sobel()` method.  
+- The weighted average of all output binary images were taken (i.e. voting on pixel values), and a passing grade is specified. If the result of the weighted average is more than then passing grade the pixel is set to 1, otherwise to 0. The weights used for averaging and the passing grade were determined through multiple iterations of trial and error to see which combination works best.  
+- The thresholding was then done based on color only. Various additional methods such as the following were defined and used to perform thresholding:  
+  - `get_R_thresh()`: from line 389 to 401 of `imagetransform.py` was used to peform thresholding based on the R channel.  
+  - `get_G_thresh()`: from line 421 to 433 of `imagetransform.py` was used to peform thresholding based on the G channel.  
+  - `get_B_thresh()`: from line 405 to 417 of `imagetransform.py` was used to peform thresholding based on the B channel.  
+  - `get_H_thresh()`: from line 437 to 449 of `imagetransform.py` was used to peform thresholding based on the H channel.  
+  - `get_S_thresh()`: from line 469 to 481 of `imagetransform.py` was used to peform thresholding based on the S channel.  
+  - `get_L_thresh()`: from line 453 to 465 of `imagetransform.py` was used to peform thresholding based on the L channel.  
+  - `get_gray_thresh()`: from line 485 to 497 of `imagetransform.py` was used to peform thresholding based on the grayscale pixel values.  
+- Similar to the gradient thresholding, the weighted average of all output binary images were taken (i.e. voting on pixel values), and a passing grade is specified. If the result of the weighted average is more than then passing grade the pixel is set to 1, otherwise to 0. The weights used for averaging and the passing grade were determined through multiple iterations of trial and error to see which combination works best.  
+- The binary images resulting from color thresholding and gradient thresholding were then combined using an or operator (i.e. pixels have non-zero values if either of the outputs have non-zero values). Note that although binary images are created, the non-zero pixel values are set to 255 to make it easier later on when things are drawn on the images.  
+  
+Example of binary images created from a random frame is shown below:
+
 
 
 
