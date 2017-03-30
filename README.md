@@ -21,18 +21,18 @@ Here the [rubric](https://review.udacity.com/#!/rubrics/571/view) points are con
   
   
     
-###Writeup / README
+### Writeup / README
   
   
-####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.   
+#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.   
 
 I did use the template provided in the course notes and modified it. You're reading the README.md!
   
   
 
-###Camera Calibration
+### Camera Calibration
 
-####1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
+#### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
 The code for this step is contained in the function `calibrate_camera_from_path()` (lines #41 through #100 of the file named `findlanelines.py`).  
 This function gets a path as input along with number of chess board corners in x and y directions and returns the camera and distortion matrices. It also has additionl kwargs (i.e. save_with_corners and save_undistort), that can be used to save the transformed images.  
@@ -53,10 +53,10 @@ Examples of the original image, original image with chessboard corners drawn on 
   
   
   
-###Pipeline (single images)
+### Pipeline (single images)
   
   
-####1. Provide an example of a distortion-corrected image.
+#### 1. Provide an example of a distortion-corrected image.
 A classe named `ImageTransform` is created for the sole purpose of manipulating images. This class (which is contained in file `imagetransform.py`) gets an array of images, an array of labels as well as camera and distorsion matrices obtianed previously plus the colorspec of the images. This class has many methods to manipulate images. One of the methods is named `to_undistort()` (from line 238 to 243), which is called when the class is created in `__init__()` method, and calls `cv2.undistort()` method to undistort the images. Gaussian blur (using `cv2.GaussianBlur()`) is also applied to the images in the `__init__()` method prior to undistorting the images. The images are also converted to RGB colorspec after undistorting in the `__init__()`. The follwoing images show a random frame that is in the original format plus the same frame after blurring / undisotrting:
 
 | Original Frame | Blurred and Undistorted | 
@@ -64,7 +64,7 @@ A classe named `ImageTransform` is created for the sole purpose of manipulating 
 | <img src="./output_images/pre_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/undist_531.png" alt="Same Image after Undistortion" height =288 width=512> |
   
   
-####2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
+#### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 A combination of color and gradient thresholds were used to generate a binary image. Thresholding occurs in method `process_images()` in class `ImageTransform`, which is contained in file `imagetransform.py` (from line 588 to line 667). The following steps were followed:  
 - the thresholding was done based on gradient only. Various additional methods such as the following were defined and used to perform thresholding:  
   - `get_canny()`: from line 294 to line 303 of `imagetransform.py` was used to obtain Canny transformation. Threshold values of (145,150) were used as inputs to this method.  
@@ -90,7 +90,7 @@ Example of binary images created from a random frame is shown below:
 | <img src="./output_images/pre_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/binary_531.png" alt="Same Image after Undistortion" height =288 width=512> |
   
   
-####3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
+#### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
 The `ImageTransform` class contains a method named `to_birds_eye()` (lines 197 to 227 of `imagetransform.py`), which uses `cv2.getPerspectiveTransform()` function to calculate the transfromation matrix and then uses `cv2.warpPerspective()` furnction to transform the images to a birds eye view. `to_birds_eye()` method has two kwargs (i.e. `original` and `processed`), based on which the perspective transformation would be performed on original images, and/or the processed binary images that are already exist in the object. The source and destination points for the transformation are initialized in `__init__()` method of the class (lines 47 to 55 of `imagetransform.py`:
 
@@ -118,7 +118,7 @@ As noted from above example photos, the perspective transform works properly as 
 
 
 
-####4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+#### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
 The `ImageTransform` class contains a method named `detect_lanes()` (lines 671 to 874 of `imagetransform.py`), which identifies the lane pixels and fit their position with a polynomial. The previous base position of the left and right lanes can be provided as arguments to this method (i.e. `prev_left_pos` and `prev_right_pos`). A `verbose` argument is also provided to the method, which if True will plot the results during the operation. The following is performed in the method:  
 - If `prev_left_pos` and `prev_right_pos` arguments are None, then a blind search is performed by calculating the histogram in the bottom half of the picture and searching for the maximum points of that histogram in the right and left portion of that histogram (lines 703 to 721 of `imagetransform.py`).  
@@ -139,7 +139,7 @@ The following image shows the steps taken in `detect_lanes()` method (i.e. the o
 
 The left image is the processed binary image, the middle image shows the window search process from bottom of the image upwards plus the fitted polylines, and the right image above shows the result of the lane finding after `cv2.fillPoly()` function is used to hatch between the fitted polylines.
 
-####5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
+#### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
 As noted in the answer to the previous question, this is done in method `detect_lanes()` contained in the `ImageTransform` class (lines 822 to 836 of `imagetransform.py`). The following is the code used for this calculation:
 
@@ -166,7 +166,7 @@ off_center *= self._xm_per_pix
 
 y_eval is initially set to `img_height*self._ym_per_pix` in order to calculate the results at the bottom of the image, where the car is located. note that the polyfit parameters `left_fit_cr` and `right_fit_cr` are already based on real coordinates. The position of the lanes are converted to the real coordinates by multiplying by the conversion factors.
 
-####6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
+#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
 Method `plot_fitted_poly()` in class `ImageTransform` performs the task of plotting the resutls on the original image. It takes arguments `fitted_poly_list`, which is the polyfit parameters for left and right lanes and `labels`, which is the optional text that will be printed on the image. Below is an example output of the function, which is plotted side by side with the original frame:
 
@@ -175,17 +175,17 @@ Method `plot_fitted_poly()` in class `ImageTransform` performs the task of plott
 | <img src="./output_images/pre_531.png" alt="Original Frame" height =288 width=512> | <img src="./output_images/post_531.png" alt="Final Result" height =288 width=512> |
 
 
-###Pipeline (video)
+### Pipeline (video)
 
-####1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
+#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
 Here's a [link to my video result](./AK_project_video.mp4)
 
 ---
 
-###Discussion
+### Discussion
 
-####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 The following challenges were encoutered and resolved during the implementation of this project:  
 - Automatically evaluating the lane lines and determining if they make sense was challenging. For that I had to check the difference between the positions of the left and right lanes, difference in 1/curve_rad of the right and left lanes, and the difference between the fitploy parameters of left and right lanes. However, not knowing how those values changed during the video was challenging. I ended up creating a log file during the video porcessing, which stored all pertinent parameters for the left and right lanes. Based on this data the decision bounds were selected to correctly identify whether lanes are valid.  
